@@ -130,6 +130,9 @@ jobs:
 
       - name: Build with PyInstaller (macOS)
         run: |
+          # Do not add --strip here: bin/yt-dlp is itself a PyInstaller onefile binary
+          # whose Python archive is appended to the executable, and strip discards that
+          # archive, leaving a bootloader stub that exits 255 on every run.
           pyinstaller \
             --name "Harmoni" \
             --windowed \
@@ -141,7 +144,6 @@ jobs:
             --add-binary "bin/yt-dlp:bin" \
             --add-data "config.json.example:." \
             --add-data "data:data" \
-            --strip \
             gui_main.py
 
       - name: Detect architecture
@@ -209,6 +211,9 @@ jobs:
 
       - name: Build with PyInstaller (Linux)
         run: |
+          # Do not add --strip here: bin/yt-dlp is itself a PyInstaller onefile binary
+          # whose Python archive is appended to the executable, and strip discards that
+          # archive, leaving a bootloader stub that exits 255 on every run.
           pyinstaller \
             --name "Harmoni" \
             --windowed \
@@ -219,7 +224,6 @@ jobs:
             --add-binary "bin/yt-dlp:bin" \
             --add-data "config.json.example:." \
             --add-data "data:data" \
-            --strip \
             gui_main.py
 
       - name: Package as tar.gz (Linux)
