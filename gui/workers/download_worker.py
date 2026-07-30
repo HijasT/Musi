@@ -7,6 +7,7 @@ from typing import Optional
 from PySide6.QtCore import QThread, Signal
 
 from gui.workers.download_queue import DownloadQueue, DownloadStatus, QueueItem
+from utils.ytdlp_args import build_extra_ytdlp_args
 
 
 class DownloadWorker(QThread):
@@ -143,6 +144,7 @@ class DownloadWorker(QThread):
             "--quiet",
             "--progress"
         ]
+        cmd.extend(build_extra_ytdlp_args(self.config))
 
         try:
             process = subprocess.Popen(

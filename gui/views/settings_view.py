@@ -244,6 +244,20 @@ class SettingsView(QWidget):
         self.retry_input.setMaximumWidth(200)
         download_layout.addWidget(self.retry_input)
 
+        ytdlp_args_label = QLabel("Extra yt-dlp arguments")
+        ytdlp_args_label.setObjectName("muted")
+        download_layout.addWidget(ytdlp_args_label)
+        self.ytdlp_args_input = QLineEdit()
+        self.ytdlp_args_input.setPlaceholderText('e.g. --cookies cookies.txt --limit-rate 1M')
+        download_layout.addWidget(self.ytdlp_args_input)
+
+        ffmpeg_args_label = QLabel("Extra ffmpeg arguments")
+        ffmpeg_args_label.setObjectName("muted")
+        download_layout.addWidget(ffmpeg_args_label)
+        self.ffmpeg_args_input = QLineEdit()
+        self.ffmpeg_args_input.setPlaceholderText('e.g. -ar 44100')
+        download_layout.addWidget(self.ffmpeg_args_input)
+
         layout.addWidget(download_group)
 
         # Metadata Settings Group
@@ -313,6 +327,8 @@ class SettingsView(QWidget):
         self.redirect_uri_input.setText(self.config.get("spotify_redirect_uri", "http://127.0.0.1:8888/callback"))
         self.sleep_input.setText(str(self.config.get("sleep_between", 5)))
         self.retry_input.setText(str(self.config.get("retry_attempts", 3)))
+        self.ytdlp_args_input.setText(self.config.get("ytdlp_extra_args", ""))
+        self.ffmpeg_args_input.setText(self.config.get("ffmpeg_extra_args", ""))
         self.metadata_check.setChecked(self.config.get("enable_metadata_embedding", True))
         self.template_combo.setCurrentText(self.config.get("metadata_template", "basic"))
         self.musicbrainz_check.setChecked(self.config.get("enable_musicbrainz_lookup", True))
@@ -586,6 +602,8 @@ class SettingsView(QWidget):
             self.config["spotify_client_id"] = self.client_id_input.text().strip()
             self.config["sleep_between"] = self._safe_int(self.sleep_input.text(), 5)
             self.config["retry_attempts"] = self._safe_int(self.retry_input.text(), 3)
+            self.config["ytdlp_extra_args"] = self.ytdlp_args_input.text().strip()
+            self.config["ffmpeg_extra_args"] = self.ffmpeg_args_input.text().strip()
             self.config["enable_metadata_embedding"] = self.metadata_check.isChecked()
             self.config["metadata_template"] = self.template_combo.currentText()
             self.config["enable_musicbrainz_lookup"] = self.musicbrainz_check.isChecked()

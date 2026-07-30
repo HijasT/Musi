@@ -3,6 +3,7 @@ import subprocess
 import json
 import questionary
 from utils.logger import log_info, log_success, log_error
+from utils.ytdlp_args import build_extra_ytdlp_args
 
 def get_youtube_info(url):
     """
@@ -34,7 +35,7 @@ def get_youtube_info(url):
         return None
 
 
-def download_from_link(url, output_dir, audio_format):
+def download_from_link(url, output_dir, audio_format, config=None):
     """
     Download a single YouTube video after confirming title.
     """
@@ -58,6 +59,7 @@ def download_from_link(url, output_dir, audio_format):
         "-x", "--audio-format", audio_format,
         "-o", os.path.join(output_dir, "%(title)s.%(ext)s")
     ]
+    cmd.extend(build_extra_ytdlp_args(config))
     result = subprocess.run(cmd)
     if result.returncode == 0:
         log_success(f"Downloaded: {title}")
@@ -65,7 +67,7 @@ def download_from_link(url, output_dir, audio_format):
         log_error(f"Failed to download: {title}")
 
 
-def download_from_playlist(url, output_dir, audio_format, sleep_between):
+def download_from_playlist(url, output_dir, audio_format, sleep_between, config=None):
     """
     Download all videos from a playlist after confirming contents.
     """
@@ -96,6 +98,7 @@ def download_from_playlist(url, output_dir, audio_format, sleep_between):
         "-x", "--audio-format", audio_format,
         "-o", os.path.join(output_dir, "%(title)s.%(ext)s")
     ]
+    cmd.extend(build_extra_ytdlp_args(config))
     result = subprocess.run(cmd)
     if result.returncode == 0:
         log_success(f"Downloaded playlist: {playlist_title}")

@@ -778,9 +778,9 @@ def downloads_menu(config):
                 continue
 
             if "playlist" in url.lower():
-                download_from_playlist(url, config["output_dir"], config["audio_format"], config["sleep_between"])
+                download_from_playlist(url, config["output_dir"], config["audio_format"], config["sleep_between"], config=config)
             else:
-                download_from_link(url, config["output_dir"], config["audio_format"])
+                download_from_link(url, config["output_dir"], config["audio_format"], config=config)
 
         elif choice == "Back":
             log_info("Returning to main menu...")

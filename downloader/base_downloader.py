@@ -4,6 +4,7 @@ import time
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from utils import log_info, log_success, log_error, log_warning
+from utils.ytdlp_args import build_extra_ytdlp_args
 from tqdm import tqdm
 
 
@@ -58,6 +59,7 @@ def download_track(artist, track, output_dir, audio_format, sleep_between, confi
         "--audio-format", audio_format,
         "-o", os.path.join(output_dir, f"{filename}.%(ext)s")
     ]
+    cmd.extend(build_extra_ytdlp_args(config))
 
     try:
         process = subprocess.Popen(cmd)
@@ -103,6 +105,7 @@ def _download_worker(track_dict, output_dir, audio_format, config=None):
         "--audio-format", audio_format,
         "-o", os.path.join(output_dir, f"{filename}.%(ext)s")
     ]
+    cmd.extend(build_extra_ytdlp_args(config))
 
     try:
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)

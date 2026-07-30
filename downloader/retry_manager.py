@@ -72,11 +72,12 @@ def retry_failed(config):
             
             try:
                 download_track(
-                    t["artist"], 
-                    t["track"], 
-                    config["output_dir"], 
-                    config["audio_format"], 
-                    config["sleep_between"]
+                    t["artist"],
+                    t["track"],
+                    config["output_dir"],
+                    config["audio_format"],
+                    config["sleep_between"],
+                    config=config
                 )
                 success = True
                 log_info(f"Successfully downloaded on retry: {t['artist']} - {t['track']}")

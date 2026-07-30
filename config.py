@@ -35,6 +35,8 @@ DEFAULT_CONFIG = {
     "exportify_watch_folder": "data/exportify",
     "ffmpeg_path": "",
     "ytdlp_path": "",
+    "ytdlp_extra_args": "",
+    "ffmpeg_extra_args": "",
 
     # Sync behavior
     "sync_write_tracks_json": True,
@@ -137,6 +139,8 @@ CONFIG_SCHEMA = {
     "exportify_watch_folder": {"type": str, "required": False},
     "ffmpeg_path": {"type": str, "required": False},
     "ytdlp_path": {"type": str, "required": False},
+    "ytdlp_extra_args": {"type": str, "required": False},
+    "ffmpeg_extra_args": {"type": str, "required": False},
 
     "sync_write_tracks_json": {"type": bool, "required": False},
     "auto_sync_enabled": {"type": bool, "required": False},
