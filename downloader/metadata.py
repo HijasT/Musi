@@ -927,14 +927,18 @@ def find_downloaded_audio_path(output_dir: str, base_filename: str) -> Optional[
         if os.path.exists(candidate):
             return candidate
 
-    # yt-dlp might output with a different extension casing or additional suffixes; best effort scan.
+    # Fall back to a normalized comparison
+    # that ignores punctuation/whitespace differences entirely.
+    from utils.filename_match import normalize_match_key
+
+    target_key = normalize_match_key(base_filename)
     try:
         for name in os.listdir(output_dir):
-            if not name.lower().startswith(base_filename.lower()):
+            stem, ext = os.path.splitext(name)
+            if ext.lower() not in VALID_AUDIO_EXTENSIONS:
                 continue
-            p = os.path.join(output_dir, name)
-            if os.path.splitext(p)[1].lower() in VALID_AUDIO_EXTENSIONS:
-                return p
+            if normalize_match_key(stem) == target_key:
+                return os.path.join(output_dir, name)
     except Exception:
         pass
 

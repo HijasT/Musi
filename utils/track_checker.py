@@ -1,18 +1,18 @@
 import os
 from utils.logger import log_info
+from utils.filename_match import normalize_match_key
 
 
 def track_key(track: dict) -> str:
     """Generate a unique key for a track based on artist and track name."""
-    artist = (track.get("artist") or "").strip().lower()
-    name = (track.get("track") or "").strip().lower()
-    return f"{artist}|{name}"
+    artist = track.get("artist") or ""
+    name = track.get("track") or ""
+    return normalize_match_key(f"{artist}{name}")
 
 
 def existing_track_keys_in_dir(directory: str) -> set:
     """
-    Get a set of track keys for all audio files in a directory.
-    Parses filenames in the format "Artist - Track.ext" to generate keys.
+    Get a set of normalized track keys for all audio files in a directory.
     """
     keys = set()
     if not os.path.exists(directory):
@@ -25,13 +25,7 @@ def existing_track_keys_in_dir(directory: str) -> set:
             name, ext = os.path.splitext(filename)
             if ext.lower() not in audio_extensions:
                 continue
-
-            # Parse "Artist - Track" format
-            if " - " in name:
-                parts = name.split(" - ", 1)
-                artist = parts[0].strip().lower()
-                track = parts[1].strip().lower()
-                keys.add(f"{artist}|{track}")
+            keys.add(normalize_match_key(name))
     except OSError:
         pass
 
@@ -49,13 +43,13 @@ def check_downloaded_files(output_dir, tracks):
     try:
         if not os.path.exists(output_dir):
             os.makedirs(output_dir, exist_ok=True)
-        existing_files = set(os.listdir(output_dir))
     except Exception:
-        existing_files = set()
+        pass
+
+    existing_keys = existing_track_keys_in_dir(output_dir)
 
     for track in tracks:
-        filename = f"{track['artist']} - {track['track']}.mp3".replace("/", "-")
-        if filename in existing_files:
+        if track_key(track) in existing_keys:
             downloaded.append(track)
         else:
             pending.append(track)
@@ -113,13 +107,12 @@ def check_downloaded_playlists(output_dir, playlists):
             })
             continue
 
-        existing_files = set(os.listdir(playlist_dir))
+        existing_keys = existing_track_keys_in_dir(playlist_dir)
         downloaded_tracks = []
         pending_tracks = []
 
         for track in tracks:
-            filename = f"{track['artist']} - {track['track']}.mp3".replace("/", "-")
-            if filename in existing_files:
+            if track_key(track) in existing_keys:
                 downloaded_tracks.append(track)
             else:
                 pending_tracks.append(track)
