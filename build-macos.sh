@@ -61,6 +61,9 @@ sips -z 1024 1024 gui/resources/icons/app/app_icon.png --out icon.iconset/icon_5
 iconutil -c icns icon.iconset -o HARMONI.icns
 
 # Build with PyInstaller
+# Do not add --strip here: bin/yt-dlp is itself a PyInstaller onefile binary whose
+# Python archive is appended to the executable, and strip discards that archive,
+# leaving a bootloader stub that exits 255 on every run.
 echo "=== Building with PyInstaller ==="
 pyinstaller \
     --name "HARMONI" \
@@ -73,7 +76,6 @@ pyinstaller \
     --add-binary "bin/yt-dlp:bin" \
     --add-data "config.json.example:." \
     --add-data "data:data" \
-    --strip \
     gui_main.py
 
 # Create DMG
