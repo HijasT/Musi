@@ -54,6 +54,12 @@ class SpotifyView(QWidget):
         self.connect_btn = QPushButton("Connect to Spotify")
         self.connect_btn.clicked.connect(self._show_oauth_dialog)
         header_layout.addWidget(self.connect_btn)
+
+        self.disconnect_btn = QPushButton("Disconnect")
+        self.disconnect_btn.setObjectName("secondary")
+        self.disconnect_btn.clicked.connect(self._disconnect)
+        self.disconnect_btn.setEnabled(False)
+        header_layout.addWidget(self.disconnect_btn)
         layout.addLayout(header_layout)
 
         # Progress bar for loading
@@ -189,6 +195,7 @@ class SpotifyView(QWidget):
             self.status_label.setText("Connected")
             self.status_label.setStyleSheet("color: #1db954;")
             self.connect_btn.setText("Reconnect")
+            self.disconnect_btn.setEnabled(True)
             self.refresh_btn.setEnabled(True)
             self.liked_btn.setEnabled(True)
             self.connection_changed.emit(True)
@@ -198,6 +205,7 @@ class SpotifyView(QWidget):
             self.status_label.setText("Not connected")
             self.status_label.setStyleSheet("")
             self.connect_btn.setText("Connect to Spotify")
+            self.disconnect_btn.setEnabled(False)
             self.refresh_btn.setEnabled(False)
             self.liked_btn.setEnabled(False)
             self.connection_changed.emit(False)
@@ -212,6 +220,25 @@ class SpotifyView(QWidget):
             self._set_connected(True)
         else:
             QMessageBox.warning(self, "Authentication Failed", message)
+
+    def _disconnect(self):
+        reply = QMessageBox.question(
+            self, "Disconnect Spotify",
+            "Disconnect from Spotify?\nYou'll need to reconnect to browse or download playlists again.",
+            QMessageBox.Yes | QMessageBox.No, QMessageBox.No,
+        )
+        if reply != QMessageBox.Yes:
+            return
+        ok = TokenManager().clear()
+        if not ok:
+            QMessageBox.warning(self, "Disconnect Failed", "Could not clear the cached Spotify token.")
+            return
+        self._stop_worker()
+        self._tracks_cache.clear()
+        self.current_tracks = []
+        self.playlist_list.clear()
+        self.tracks_table.setRowCount(0)
+        self._set_connected(False)
 
     def _prompt_reconnect(self):
         reply = QMessageBox.question(
