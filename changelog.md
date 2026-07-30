@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.0] - 2026-07-30
+
+### Added
+- **Custom yt-dlp / ffmpeg arguments**: You can now pass extra CLI flags straight through to yt-dlp and ffmpeg for every download:
+  - New `ytdlp_extra_args` and `ffmpeg_extra_args` config fields (ffmpeg args are forwarded via yt-dlp's `--postprocessor-args`)
+  - New "Extra yt-dlp arguments" / "Extra ffmpeg arguments" fields in the GUI Settings view, under Download Settings
+  - Editable from the CLI config menu like any other setting
+  - Applied consistently across all download paths: track/batch downloads, retries, and direct link/playlist downloads
+- **Disconnect button for Spotify**: The Spotify view now has a "Disconnect" button next to Connect, so you can clear the cached token and re-auth without digging through files.
+
+### Fixed
+- **Duplicate-detection and metadata matching for special/reserved characters**: Filenames with characters yt-dlp sanitizes (`: * / \ < > | " ?`) or full-width unicode variants no longer cause tracks to be re-downloaded or fail metadata embedding. Matching is now done via a normalized key (`utils/filename_match.py`) instead of exact/prefix string comparison, in `downloader/metadata.py` and `utils/track_checker.py`.
+- **Bundled yt-dlp binary was being stripped on macOS/Linux builds**, breaking every download on those platforms. The build workflow and `build-macos.sh` no longer strip it.
+
+### Why
+- Passing custom flags was the most requested missing feature: without something like `--cookies cookies.txt`, large playlist downloads get rate-limited/timed out by YouTube. Power users can now also tweak ffmpeg output (e.g. sample rate) without touching code.
+- The filename-matching fix prevents silent re-downloads/duplicate work for tracks whose titles contain characters that get sanitized differently across yt-dlp versions/platforms.
+- The macOS/Linux build fix was a release blocker — every download failed post-build until yt-dlp was no longer stripped.
+
+### Compatibility
+- Fully backward compatible with older `config.json` files. Missing keys are backfilled with empty defaults on load, so existing configs keep working unchanged and no extra arguments are applied unless explicitly set.
+
 ## [1.1.0] - 2026-03-03
 
 ### Added
