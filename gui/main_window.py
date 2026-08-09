@@ -3,10 +3,10 @@
 from PySide6.QtWidgets import (
     QMainWindow, QWidget, QHBoxLayout, QVBoxLayout,
     QListWidget, QListWidgetItem, QStackedWidget,
-    QStatusBar, QLabel, QFrame, QPushButton
+    QStatusBar, QLabel, QFrame, QPushButton, QMessageBox
 )
-from PySide6.QtCore import Qt, QSize, QPoint
-from PySide6.QtGui import QIcon, QMouseEvent
+from PySide6.QtCore import Qt, QSize, QPoint, QUrl
+from PySide6.QtGui import QIcon, QMouseEvent, QDesktopServices
 
 from gui.views.welcome_view import WelcomeView
 from gui.views.spotify_view import SpotifyView
@@ -14,7 +14,9 @@ from gui.views.youtube_view import YouTubeView
 from gui.views.downloads_view import DownloadsView
 from gui.views.settings_view import SettingsView
 from gui.workers.download_queue import DownloadQueue
+from gui.workers.app_update_worker import AppUpdateCheckWorker
 from gui.styles import COLORS, FONT_DISPLAY, FONT_MONO
+from constants import APP_VERSION
 
 
 class TitleBar(QWidget):
@@ -58,7 +60,7 @@ class TitleBar(QWidget):
         layout.addWidget(self.title_label)
 
         # Version badge
-        version_label = QLabel("v1.0")
+        version_label = QLabel(f"v{APP_VERSION}")
         version_label.setStyleSheet(f"""
             font-family: {FONT_MONO};
             font-size: 10px;
@@ -195,6 +197,31 @@ class MainWindow(QMainWindow):
 
         self._setup_ui()
         self._connect_signals()
+        self._check_for_app_updates()
+
+    def _check_for_app_updates(self):
+        """Check GitHub for a newer Musi release, off the GUI thread, and pop
+        up a prompt if one is found. Runs on every launch; failures (e.g. no
+        network) are silent."""
+        self.update_worker = AppUpdateCheckWorker()
+        self.update_worker.finished.connect(self._on_update_check_finished)
+        self.update_worker.start()
+
+    def _on_update_check_finished(self, update_info: dict):
+        if not update_info or not update_info.get("update_available"):
+            return
+
+        reply = QMessageBox.question(
+            self,
+            "Update Available",
+            f"A new version of Musi is available: {update_info['latest_version']} "
+            f"(you have v{update_info['current_version']}).\n\n"
+            "Open the download page?",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.Yes,
+        )
+        if reply == QMessageBox.Yes:
+            QDesktopServices.openUrl(QUrl(update_info["release_url"]))
 
     def _setup_ui(self):
         """Set up the main UI layout."""

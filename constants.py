@@ -1,3 +1,9 @@
+# App version — single source of truth, kept in sync with the GitHub release
+# tags (e.g. "1.3.0" here matches release tag "v1.3.0"). Bump this alongside
+# each tagged release so the in-app update checker compares against itself.
+APP_VERSION = "1.3.0"
+GITHUB_REPO = "HijasT/Musi"
+
 PYTHON_DEPENDENCIES = [
     "psutil",
     "colorama",
@@ -29,4 +35,5 @@ AUDIO_BITRATE_OPTIONS = {
 FAILED_FILE = "data/failed_downloads.json"
 PROGRESS_FILE = "data/download_progress.json"
 HISTORY_FILE = "data/download_history.json"
+FAVORITES_FILE = "data/favorites.json"
 LOG_FILE = "app.log"

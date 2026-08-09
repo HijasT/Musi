@@ -5,6 +5,8 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Qt
 
+from constants import APP_VERSION
+
 
 class AboutDialog(QDialog):
     """About dialog with version info and credits."""
@@ -36,7 +38,7 @@ class AboutDialog(QDialog):
         layout.addWidget(subtitle)
 
         # Version
-        version = QLabel("Version 1.0.0")
+        version = QLabel(f"Version {APP_VERSION}")
         version.setAlignment(Qt.AlignCenter)
         layout.addWidget(version)
 

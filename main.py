@@ -34,6 +34,15 @@ if __name__ == "__main__":
     except Exception:
         pass  # Silently ignore update check failures
 
+    # Check for Musi updates
+    try:
+        from tools.app_update_checker import check_app_updates, notify_update_available as notify_app_update
+        app_update_info = check_app_updates()
+        if app_update_info:
+            notify_app_update(app_update_info)
+    except Exception:
+        pass  # Silently ignore update check failures
+
     os.makedirs(config["output_dir"], exist_ok=True)
 
     # CSV-first startup checks (non-fatal)
