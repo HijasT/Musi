@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.0] - 2026-08-09 (Musi fork)
+
+### Added
+- **Musi rebrand**: forked from [Harmoni](https://github.com/Ssenseii/harmoni) and renamed throughout the GUI package and entry point (window title, About dialog, welcome screen, taskbar app ID, macOS support-folder path).
+- **"Tape Deck" GUI redesign**: new charcoal-black theme with a green accent (`gui/styles.py`), replacing the original dark-purple theme. Chip-style status badges (Queued/Downloading/Done/Failed) in the download queue view.
+- **Auto-redownload corrupted files**: library cleanup (`tools/library_cleanup.py`) now re-queues a redownload for each corrupted/empty file it removes, instead of only deleting it. Controlled by the new `auto_redownload_corrupted` config setting (default on), toggleable from the CLI Config menu or the GUI Settings view's new "Library Maintenance" section.
+
+### Why
+- The original theme read as generic/AI-templated; the redesign gives the app a distinct visual identity while keeping the existing layout and widgets intact.
+- Corrupted files silently disappearing from the library (previous behavior) meant tracks had to be manually re-added and re-downloaded; auto-redownload closes that loop automatically.
+
 ## [1.2.0] - 2026-07-30
 
 ### Added
