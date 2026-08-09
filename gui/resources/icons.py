@@ -1,4 +1,4 @@
-"""Icon management for Musi GUI."""
+"""Icon management for Chaos Media Downloader GUI."""
 
 import os
 import sys

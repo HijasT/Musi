@@ -1,1 +1,1 @@
-"""Musi Desktop GUI package."""
+"""Chaos Media Downloader Desktop GUI package."""

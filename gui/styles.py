@@ -1,4 +1,4 @@
-"""QSS Stylesheets for Musi GUI — "Tape Deck" dark theme."""
+"""QSS Stylesheets for Chaos Media Downloader GUI — "Tape Deck" dark theme."""
 
 # Color palette — charcoal-black neutrals, teal-green as the single accent.
 # Success uses a separate olive-green so status chips stay distinguishable from

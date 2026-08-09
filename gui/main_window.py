@@ -1,4 +1,4 @@
-"""Main window with custom title bar and sidebar navigation for Musi GUI."""
+"""Main window with custom title bar and sidebar navigation for Chaos Media Downloader GUI."""
 
 from PySide6.QtWidgets import (
     QMainWindow, QWidget, QHBoxLayout, QVBoxLayout,
@@ -49,7 +49,7 @@ class TitleBar(QWidget):
             layout.addWidget(icon_label)
 
         # App name with version badge
-        self.title_label = QLabel("MUSI")
+        self.title_label = QLabel("CHAOS MD")
         self.title_label.setStyleSheet(f"""
             font-family: {FONT_DISPLAY};
             font-size: 15px;
@@ -191,7 +191,7 @@ class MainWindow(QMainWindow):
         self.setWindowFlags(Qt.FramelessWindowHint)
         self.setAttribute(Qt.WA_TranslucentBackground, False)
 
-        self.setWindowTitle("Musi")
+        self.setWindowTitle("Chaos Media Downloader")
         self.setMinimumSize(600, 400)
         self.resize(1200, 700)
 
@@ -200,9 +200,9 @@ class MainWindow(QMainWindow):
         self._check_for_app_updates()
 
     def _check_for_app_updates(self):
-        """Check GitHub for a newer Musi release, off the GUI thread, and pop
-        up a prompt if one is found. Runs on every launch; failures (e.g. no
-        network) are silent."""
+        """Check GitHub for a newer Chaos Media Downloader release, off the
+        GUI thread, and pop up a prompt if one is found. Runs on every
+        launch; failures (e.g. no network) are silent."""
         self.update_worker = AppUpdateCheckWorker()
         self.update_worker.finished.connect(self._on_update_check_finished)
         self.update_worker.start()
@@ -214,7 +214,7 @@ class MainWindow(QMainWindow):
         reply = QMessageBox.question(
             self,
             "Update Available",
-            f"A new version of Musi is available: {update_info['latest_version']} "
+            f"A new version of Chaos Media Downloader is available: {update_info['latest_version']} "
             f"(you have v{update_info['current_version']}).\n\n"
             "Open the download page?",
             QMessageBox.Yes | QMessageBox.No,

@@ -13,7 +13,7 @@ class AboutDialog(QDialog):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("About Musi")
+        self.setWindowTitle("About Chaos Media Downloader")
         self.setFixedSize(400, 300)
         self.setModal(True)
 
@@ -25,14 +25,15 @@ class AboutDialog(QDialog):
         layout.setSpacing(15)
         layout.setContentsMargins(30, 30, 30, 30)
 
-        # Title
-        title = QLabel("Musi")
+        # Title — compact wordmark (matches the title bar); the full name is
+        # spelled out in the subtitle below since it doesn't fit at title size.
+        title = QLabel("Chaos MD")
         title.setObjectName("title")
         title.setAlignment(Qt.AlignCenter)
         layout.addWidget(title)
 
         # Subtitle
-        subtitle = QLabel("Music Downloader")
+        subtitle = QLabel("Chaos Media Downloader")
         subtitle.setObjectName("subtitle")
         subtitle.setAlignment(Qt.AlignCenter)
         layout.addWidget(subtitle)
@@ -46,7 +47,8 @@ class AboutDialog(QDialog):
 
         # Description
         description = QLabel(
-            "Download music from Spotify playlists and YouTube.\n\n"
+            "Download music from Spotify playlists and YouTube, or video from "
+            "hundreds of other sites.\n\n"
             "Uses yt-dlp for downloading and FFmpeg for audio conversion."
         )
         description.setAlignment(Qt.AlignCenter)

@@ -33,7 +33,7 @@ class YtdlpInstallerWorker(QThread):
             if getattr(sys, 'frozen', False) and sys.platform == "darwin":
                 # macOS .app bundle: use user-writable location
                 self.install_dir = os.path.join(
-                    os.path.expanduser("~/Library/Application Support/Musi"), "bin"
+                    os.path.expanduser("~/Library/Application Support/ChaosMD"), "bin"
                 )
             elif getattr(sys, 'frozen', False):
                 # Windows/Linux frozen: install next to the executable
@@ -67,7 +67,7 @@ class YtdlpInstallerWorker(QThread):
             try:
                 self.progress.emit(5, "Connecting...")
 
-                request = Request(url, headers={"User-Agent": "Musi/1.0"})
+                request = Request(url, headers={"User-Agent": "ChaosMD/1.0"})
                 response = urlopen(request, timeout=30)
 
                 total_size = int(response.headers.get("content-length", 0))

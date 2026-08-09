@@ -34,7 +34,7 @@ if __name__ == "__main__":
     except Exception:
         pass  # Silently ignore update check failures
 
-    # Check for Musi updates
+    # Check for Chaos Media Downloader updates
     try:
         from tools.app_update_checker import check_app_updates, notify_update_available as notify_app_update
         app_update_info = check_app_updates()

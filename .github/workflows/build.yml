@@ -55,7 +55,7 @@ jobs:
         shell: pwsh
         run: |
           pyinstaller `
-            --name "Musi" `
+            --name "ChaosMD" `
             --windowed `
             --onefile `
             --icon "gui\resources\icons\app\app_icon.ico" `
@@ -71,15 +71,15 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path release_win | Out-Null
-          Copy-Item dist\Musi.exe release_win\
+          Copy-Item dist\ChaosMD.exe release_win\
           Copy-Item config.json.example release_win\
-          Compress-Archive -Path release_win\* -DestinationPath Musi-Windows.zip
+          Compress-Archive -Path release_win\* -DestinationPath ChaosMD-Windows.zip
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Musi-Windows
-          path: Musi-Windows.zip
+          name: ChaosMD-Windows
+          path: ChaosMD-Windows.zip
 
   # ─────────────────────────────────────────
   # macOS
@@ -126,7 +126,7 @@ jobs:
           sips -z 512  512  gui/resources/icons/app/app_icon.png --out icon.iconset/icon_256x256@2x.png
           sips -z 512  512  gui/resources/icons/app/app_icon.png --out icon.iconset/icon_512x512.png
           sips -z 1024 1024 gui/resources/icons/app/app_icon.png --out icon.iconset/icon_512x512@2x.png
-          iconutil -c icns icon.iconset -o Musi.icns
+          iconutil -c icns icon.iconset -o ChaosMD.icns
 
       - name: Build with PyInstaller (macOS)
         run: |
@@ -134,10 +134,10 @@ jobs:
           # whose Python archive is appended to the executable, and strip discards that
           # archive, leaving a bootloader stub that exits 255 on every run.
           pyinstaller \
-            --name "Musi" \
+            --name "ChaosMD" \
             --windowed \
             --onedir \
-            --icon Musi.icns \
+            --icon ChaosMD.icns \
             --add-data "gui/resources/icons:gui/resources/icons" \
             --add-binary "bin/ffmpeg:bin" \
             --add-binary "bin/ffprobe:bin" \
@@ -153,23 +153,23 @@ jobs:
       - name: Create DMG (macOS)
         run: |
           mkdir -p dmg_contents
-          if [ -d "dist/Musi.app" ]; then
-            cp -r dist/Musi.app dmg_contents/
+          if [ -d "dist/ChaosMD.app" ]; then
+            cp -r dist/ChaosMD.app dmg_contents/
           else
-            cp -r dist/Musi dmg_contents/
+            cp -r dist/ChaosMD dmg_contents/
           fi
           ln -s /Applications dmg_contents/Applications
           hdiutil create \
-            -volname "Musi" \
+            -volname "ChaosMD" \
             -srcfolder dmg_contents \
             -ov -format UDZO \
-            "Musi-macOS-${{ steps.arch.outputs.arch }}.dmg"
+            "ChaosMD-macOS-${{ steps.arch.outputs.arch }}.dmg"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Musi-macOS-${{ steps.arch.outputs.arch }}
-          path: Musi-macOS-${{ steps.arch.outputs.arch }}.dmg
+          name: ChaosMD-macOS-${{ steps.arch.outputs.arch }}
+          path: ChaosMD-macOS-${{ steps.arch.outputs.arch }}.dmg
 
   # ─────────────────────────────────────────
   # Linux
@@ -215,7 +215,7 @@ jobs:
           # whose Python archive is appended to the executable, and strip discards that
           # archive, leaving a bootloader stub that exits 255 on every run.
           pyinstaller \
-            --name "Musi" \
+            --name "ChaosMD" \
             --windowed \
             --onefile \
             --add-data "gui/resources/icons:gui/resources/icons" \
@@ -229,16 +229,16 @@ jobs:
       - name: Package as tar.gz (Linux)
         run: |
           mkdir -p release_linux
-          cp dist/Musi release_linux/
+          cp dist/ChaosMD release_linux/
           cp config.json.example release_linux/
-          chmod +x release_linux/Musi
-          tar -czf Musi-Linux.tar.gz -C release_linux .
+          chmod +x release_linux/ChaosMD
+          tar -czf ChaosMD-Linux.tar.gz -C release_linux .
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Musi-Linux
-          path: Musi-Linux.tar.gz
+          name: ChaosMD-Linux
+          path: ChaosMD-Linux.tar.gz
 
   # ─────────────────────────────────────────
   # GitHub Release  (only on version tags)
@@ -261,11 +261,11 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          name: "Musi ${{ github.ref_name }}"
+          name: "ChaosMD ${{ github.ref_name }}"
           draft: false
           prerelease: false
           generate_release_notes: true
           files: |
-            artifacts/Musi-Windows/Musi-Windows.zip
-            artifacts/Musi-macOS-*/Musi-macOS-*.dmg
-            artifacts/Musi-Linux/Musi-Linux.tar.gz
+            artifacts/ChaosMD-Windows/ChaosMD-Windows.zip
+            artifacts/ChaosMD-macOS-*/ChaosMD-macOS-*.dmg
+            artifacts/ChaosMD-Linux/ChaosMD-Linux.tar.gz

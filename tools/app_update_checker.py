@@ -1,4 +1,4 @@
-"""Musi app update checker.
+"""Chaos Media Downloader app update checker.
 Checks GitHub Releases for a newer tagged version than the running app.
 """
 
@@ -55,7 +55,7 @@ def is_update_available(current: str, latest: str) -> bool:
 
 def check_app_updates() -> Optional[dict]:
     """
-    Check whether a newer Musi release is available.
+    Check whether a newer Chaos Media Downloader release is available.
 
     Returns a dict with keys:
     - update_available: bool
@@ -78,9 +78,9 @@ def check_app_updates() -> Optional[dict]:
         "latest_version": latest_version,
         "release_url": release.get("html_url") or f"https://github.com/{GITHUB_REPO}/releases/latest",
         "message": (
-            f"Musi update available: v{APP_VERSION} → {latest_version}"
+            f"Chaos Media Downloader update available: v{APP_VERSION} → {latest_version}"
             if has_update
-            else f"Musi is up to date (v{APP_VERSION})"
+            else f"Chaos Media Downloader is up to date (v{APP_VERSION})"
         ),
     }
 
@@ -93,7 +93,7 @@ def notify_update_available(update_info: dict) -> None:
     if update_info.get("update_available"):
         message = (
             f"\n{'='*60}\n"
-            f"MUSI UPDATE AVAILABLE\n"
+            f"CHAOS MUSIC DOWNLOADER UPDATE AVAILABLE\n"
             f"{'='*60}\n"
             f"Current version: v{update_info['current_version']}\n"
             f"Latest version:  {update_info['latest_version']}\n"
@@ -103,4 +103,4 @@ def notify_update_available(update_info: dict) -> None:
         )
         log_warning(message.strip())
     else:
-        log_info(f"✓ {update_info.get('message', 'Musi is up to date')}")
+        log_info(f"✓ {update_info.get('message', 'Chaos Media Downloader is up to date')}")

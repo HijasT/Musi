@@ -214,12 +214,12 @@ class WelcomeView(QWidget):
         header = QVBoxLayout()
         header.setSpacing(12)
 
-        title = QLabel("Welcome to Musi")
+        title = QLabel("Welcome to Chaos Media Downloader")
         title.setObjectName("title")
         title.setStyleSheet("font-size: 32px; font-weight: 700;")
         header.addWidget(title)
 
-        subtitle = QLabel("Download your favorite music from Spotify playlists and YouTube")
+        subtitle = QLabel("Download your favorite music from Spotify playlists and YouTube, or video from hundreds of other sites")
         subtitle.setObjectName("subtitle")
         subtitle.setStyleSheet("font-size: 16px;")
         header.addWidget(subtitle)

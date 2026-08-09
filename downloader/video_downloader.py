@@ -38,8 +38,8 @@ def download_video(url, output_dir, config=None, confirm=True):
     """
     Download a full video (merged best video + best audio) from any
     yt-dlp-supported site — YouTube, TikTok, Instagram, Twitter/X, Reddit,
-    Twitch, and hundreds more. Unlike the rest of Musi, this keeps the video
-    track rather than extracting audio only.
+    Twitch, and hundreds more. Unlike the rest of Chaos Media Downloader, this
+    keeps the video track rather than extracting audio only.
 
     Set confirm=False for non-interactive callers (e.g. the GUI, which
     should confirm via its own dialog before calling this).

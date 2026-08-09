@@ -2,7 +2,7 @@
 # tags (e.g. "1.3.0" here matches release tag "v1.3.0"). Bump this alongside
 # each tagged release so the in-app update checker compares against itself.
 APP_VERSION = "1.3.0"
-GITHUB_REPO = "HijasT/Musi"
+GITHUB_REPO = "HijasT/ChaosMD"
 
 PYTHON_DEPENDENCIES = [
     "psutil",

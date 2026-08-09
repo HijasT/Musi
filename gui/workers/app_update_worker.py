@@ -1,5 +1,5 @@
-"""Background worker that checks for a newer Musi release without blocking
-the GUI thread or delaying startup."""
+"""Background worker that checks for a newer Chaos Media Downloader release
+without blocking the GUI thread or delaying startup."""
 
 from PySide6.QtCore import QThread, Signal
 
@@ -7,7 +7,7 @@ from tools.app_update_checker import check_app_updates
 
 
 class AppUpdateCheckWorker(QThread):
-    """Worker thread that checks GitHub Releases for a newer Musi version."""
+    """Worker thread that checks GitHub Releases for a newer version."""
 
     finished = Signal(dict)  # update_info dict, or {} if the check failed
 
