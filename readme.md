@@ -1,27 +1,51 @@
 
-![Musi icon](gui/resources/icons/app/app_icon.ico)
-# Musi
+<p align="center">
+  <img src="images/musi_logo.png" alt="Musi logo" width="128" height="128">
+</p>
 
-A Python tool for downloading music from Spotify and YouTube using **yt-dlp**. Available as a standalone executable, desktop GUI application, or command-line interface.
+<h1 align="center">Musi</h1>
+
+<p align="center">
+A Python tool for downloading music from Spotify and YouTube using <strong>yt-dlp</strong>.<br>
+Available as a standalone executable, desktop GUI application, or command-line interface.
+</p>
 
 Musi is a fork of [Harmoni](https://github.com/Ssenseii/harmoni) by [Ssenseii](https://github.com/Ssenseii), redesigned with a new dark "Tape Deck" interface (charcoal-black with a green accent, replacing the original purple theme) and extended with new features. All credit for the original project goes to its author — see [LICENSE](LICENSE) for the MIT terms this fork keeps.
 
 ## What's different from Harmoni
 
-- **Redesigned GUI** — a charcoal-black "Tape Deck" theme with a green accent, condensed display type, and chip-style status badges in the download queue, replacing the original dark-purple interface.
-- **Auto-redownload corrupted files** — library cleanup no longer just deletes broken/empty audio files; it automatically re-queues a redownload for each one (toggle via `auto_redownload_corrupted` in Settings or `config.json`).
+- **Redesigned GUI and logo** — a charcoal-black "Tape Deck" theme with a green accent, condensed display type, chip-style status badges in the download queue, and a new twin-reel logo, replacing the original dark-purple interface.
+- **320kbps downloads** — a new `audio_bitrate` setting (default `320k`) controls download quality, editable from Settings or the CLI's "Choose audio bitrate" tool.
+- **Convert your library with ffmpeg** — convert already-downloaded files to a different format/bitrate in bulk, from Settings → Library Maintenance or the CLI's "Convert audio format" tool.
+- **Download history & duplicate protection** — every download is logged to `data/download_history.json` by canonical artist/track, independent of the file. If a track was downloaded before but is no longer in your library, Musi asks before re-downloading it instead of silently redoing the work.
+- **Auto-redownload corrupted files** — library cleanup no longer just deletes broken/empty audio files; it automatically re-queues a redownload for each one (toggle via `auto_redownload_corrupted`).
+- **Auto-fetched lyrics** — plain lyrics are pulled from [lrclib.net](https://lrclib.net) (no API key needed) and embedded alongside the rest of the track's metadata, toggle via `enable_lyrics_fetch`.
 
 See [changelog.md](changelog.md) for the full history inherited from Harmoni.
+
+## Screenshots
+
+| Home | Downloads |
+|------|-----------|
+| ![Home](images/gui_main.png) | ![Downloads](images/gui_downloads.png) |
+
+| Spotify | YouTube |
+|---------|---------|
+| ![Spotify](images/gui_spotify.png) | ![YouTube](images/gui_youtube.png) |
+
+| Settings |
+|----------|
+| ![Settings](images/gui_settings.png) |
 
 ## Features
 
 - **Desktop GUI** - Modern graphical interface with drag-and-drop Exportify support
 - **Spotify Integration** - Download from your playlists and liked songs via OAuth
 - **YouTube Downloads** - Download from links or search by artist/song
-- **Batch Downloads** - Download entire playlists with concurrent processing
+- **Batch Downloads** - Download entire playlists with concurrent processing, at up to 320kbps
 - **Exportify Support** - Import playlists from CSV exports (easiest method!)
-- **Metadata Embedding** - Automatic ID3 tagging for MP3 files
-- **Library Management** - Duplicate detection, cleanup (with auto-redownload), and organization
+- **Metadata Embedding** - Automatic ID3 tagging, including auto-fetched lyrics
+- **Library Management** - Duplicate detection (even for deleted files), corrupted-file cleanup with auto-redownload, format conversion, and organization
 
 ## Installation Options
 

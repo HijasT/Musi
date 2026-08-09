@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Added
+- **New app logo**: a twin-reel mark on the "Tape Deck" charcoal-and-green palette, replacing the old glossy blue music-note icon (`gui/resources/icons/app/`).
+- **320kbps downloads**: new `audio_bitrate` config setting (default `320k`) applied via yt-dlp's `--audio-quality` across every download path. Editable from Settings or the CLI's "Choose audio bitrate" tool.
+- **ffmpeg-based library converter**: `tools/convert_audio.py` bulk-converts already-downloaded files to a chosen format/bitrate, from the CLI Tools menu or Settings → Library Maintenance → "Convert Library".
+- **Persistent download history**: `managers/history_manager.py` logs every successful download by canonical artist/track key, independent of the file's continued existence on disk. Playlist selection now marks tracks "(previously downloaded)", and "download all pending" flows confirm before re-downloading them.
+- **Auto-fetched lyrics**: plain lyrics pulled from lrclib.net (no API key) and embedded per-format (USLT for MP3/WAV, `LYRICS` for FLAC/Vorbis/Opus, `©lyr` for M4A). Toggle via the new `enable_lyrics_fetch` setting (default on).
+
+### Fixed
+- Download queue status chips (`gui/views/downloads_view.py`) could render at the wrong position/size, or lose their background styling entirely, due to relying on Qt's global stylesheet cascade for a widget reparented into a table cell after the app stylesheet was already applied. Chips now use inline styling set directly on the label and are updated in place rather than replaced, which also avoids orphaned widgets being left behind in the table.
+
 ## [1.0.0] - 2026-08-09 (Musi fork)
 
 ### Added
