@@ -26,6 +26,7 @@ class SettingsView(QWidget):
         self.config = config
         self.ffmpeg_worker = None
         self.ytdlp_worker = None
+        self.cleanup_worker = None
         self._setup_ui()
         self._load_values()
         self._check_ffmpeg_status()
@@ -298,6 +299,39 @@ class SettingsView(QWidget):
 
         layout.addWidget(backup_group)
 
+        # Library Maintenance Group
+        cleanup_group = QGroupBox("Library Maintenance")
+        cleanup_layout = QVBoxLayout(cleanup_group)
+        cleanup_layout.setSpacing(10)
+
+        cleanup_desc = QLabel(
+            "Scan your music library for empty or corrupted files and remove them."
+        )
+        cleanup_desc.setObjectName("muted")
+        cleanup_desc.setWordWrap(True)
+        cleanup_layout.addWidget(cleanup_desc)
+
+        self.auto_redownload_check = QCheckBox("Auto-redownload corrupted files after removal")
+        cleanup_layout.addWidget(self.auto_redownload_check)
+
+        cleanup_status_row = QHBoxLayout()
+        self.cleanup_status_label = QLabel("")
+        self.cleanup_status_label.setObjectName("muted")
+        cleanup_status_row.addWidget(self.cleanup_status_label, 1)
+        self.cleanup_run_btn = QPushButton("Clean Library")
+        self.cleanup_run_btn.setObjectName("secondary")
+        self.cleanup_run_btn.clicked.connect(self._run_library_cleanup)
+        cleanup_status_row.addWidget(self.cleanup_run_btn)
+        cleanup_layout.addLayout(cleanup_status_row)
+
+        self.cleanup_progress = QProgressBar()
+        self.cleanup_progress.setMinimum(0)
+        self.cleanup_progress.setMaximum(0)  # indeterminate — no per-file progress signal
+        self.cleanup_progress.setVisible(False)
+        cleanup_layout.addWidget(self.cleanup_progress)
+
+        layout.addWidget(cleanup_group)
+
         # Spacer
         layout.addSpacerItem(QSpacerItem(20, 20, QSizePolicy.Minimum, QSizePolicy.Expanding))
 
@@ -334,6 +368,7 @@ class SettingsView(QWidget):
         self.musicbrainz_check.setChecked(self.config.get("enable_musicbrainz_lookup", True))
         self.backup_check.setChecked(self.config.get("auto_backup", True))
         self.max_backups_input.setText(str(self.config.get("max_backups", 10)))
+        self.auto_redownload_check.setChecked(self.config.get("auto_redownload_corrupted", True))
         self.ffmpeg_path_input.setText(self.config.get("ffmpeg_path", ""))
         self.ytdlp_path_input.setText(self.config.get("ytdlp_path", ""))
 
@@ -342,14 +377,14 @@ class SettingsView(QWidget):
         available, message = check_ffmpeg_available()
 
         if available:
-            self.ffmpeg_status_icon.setStyleSheet("color: #4caf50; font-size: 14px;")
+            self.ffmpeg_status_icon.setStyleSheet(f"color: {COLORS['success']}; font-size: 14px;")
             self.ffmpeg_status_label.setText(f"Installed: {message.replace('FFmpeg found at: ', '')}")
-            self.ffmpeg_status_label.setStyleSheet("color: #4caf50;")
+            self.ffmpeg_status_label.setStyleSheet(f"color: {COLORS['success']};")
             self.ffmpeg_install_btn.setText("Reinstall")
         else:
-            self.ffmpeg_status_icon.setStyleSheet("color: #ef5350; font-size: 14px;")
+            self.ffmpeg_status_icon.setStyleSheet(f"color: {COLORS['error']}; font-size: 14px;")
             self.ffmpeg_status_label.setText("Not installed")
-            self.ffmpeg_status_label.setStyleSheet("color: #ef5350;")
+            self.ffmpeg_status_label.setStyleSheet(f"color: {COLORS['error']};")
             self.ffmpeg_install_btn.setText("Install FFmpeg")
 
     def _install_ffmpeg(self):
@@ -448,21 +483,21 @@ class SettingsView(QWidget):
                     pass
 
         if found_path and version:
-            self.ytdlp_status_icon.setStyleSheet("color: #4caf50; font-size: 14px;")
+            self.ytdlp_status_icon.setStyleSheet(f"color: {COLORS['success']}; font-size: 14px;")
             self.ytdlp_status_label.setText(f"Installed: {version} ({found_path})")
-            self.ytdlp_status_label.setStyleSheet("color: #4caf50;")
+            self.ytdlp_status_label.setStyleSheet(f"color: {COLORS['success']};")
             self.ytdlp_update_btn.setText("Check for Updates")
             self.ytdlp_update_btn.setEnabled(True)
         elif found_path:
-            self.ytdlp_status_icon.setStyleSheet("color: #4caf50; font-size: 14px;")
+            self.ytdlp_status_icon.setStyleSheet(f"color: {COLORS['success']}; font-size: 14px;")
             self.ytdlp_status_label.setText(f"Installed: {found_path}")
-            self.ytdlp_status_label.setStyleSheet("color: #4caf50;")
+            self.ytdlp_status_label.setStyleSheet(f"color: {COLORS['success']};")
             self.ytdlp_update_btn.setText("Check for Updates")
             self.ytdlp_update_btn.setEnabled(True)
         else:
-            self.ytdlp_status_icon.setStyleSheet("color: #ef5350; font-size: 14px;")
+            self.ytdlp_status_icon.setStyleSheet(f"color: {COLORS['error']}; font-size: 14px;")
             self.ytdlp_status_label.setText("Not installed")
-            self.ytdlp_status_label.setStyleSheet("color: #ef5350;")
+            self.ytdlp_status_label.setStyleSheet(f"color: {COLORS['error']};")
             self.ytdlp_update_btn.setText("Install yt-dlp")
             self.ytdlp_update_btn.setEnabled(True)
 
@@ -540,6 +575,68 @@ class SettingsView(QWidget):
         self.ytdlp_worker = None
         self._check_ytdlp_status()
 
+    def _run_library_cleanup(self):
+        """Scan the music library and remove/redownload broken files."""
+        redownload = self.auto_redownload_check.isChecked()
+        message = (
+            "This will scan your music library for empty or corrupted files and remove them."
+        )
+        if redownload:
+            message += "\n\nCorrupted files will be automatically redownloaded."
+        message += "\n\nThis may take a while for large libraries. Continue?"
+
+        reply = QMessageBox.question(
+            self,
+            "Clean Library",
+            message,
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.Yes
+        )
+        if reply != QMessageBox.Yes:
+            return
+
+        # Run against current in-memory settings, including any unsaved checkbox state
+        run_config = dict(self.config)
+        run_config["auto_redownload_corrupted"] = redownload
+
+        self.cleanup_run_btn.setEnabled(False)
+        self.cleanup_status_label.setText("Scanning library...")
+        self.cleanup_progress.setVisible(True)
+
+        from gui.workers.library_cleanup_worker import LibraryCleanupWorker
+        self.cleanup_worker = LibraryCleanupWorker(run_config)
+        self.cleanup_worker.finished.connect(self._on_cleanup_finished)
+        self.cleanup_worker.start()
+
+    def _on_cleanup_finished(self, result: dict):
+        """Handle library cleanup completion."""
+        self.cleanup_progress.setVisible(False)
+        self.cleanup_run_btn.setEnabled(True)
+        self.cleanup_worker = None
+
+        if result.get("error"):
+            self.cleanup_status_label.setText("Failed")
+            QMessageBox.warning(self, "Library Cleanup Failed", result["error"])
+            return
+
+        removed = result.get("removed", 0)
+        redownloaded = result.get("redownloaded", 0)
+        skipped = result.get("skipped", 0)
+
+        if removed == 0:
+            self.cleanup_status_label.setText("No broken files found")
+            QMessageBox.information(self, "Library Clean", "No broken files were found.")
+            return
+
+        self.cleanup_status_label.setText(f"Removed {removed}, redownloaded {redownloaded}")
+
+        summary = f"Removed {removed} broken file(s)."
+        if self.auto_redownload_check.isChecked():
+            summary += f"\nRedownloaded {redownloaded}."
+            if skipped:
+                summary += f"\nSkipped {skipped} (filename didn't match \"Artist - Title\")."
+        QMessageBox.information(self, "Library Cleanup Complete", summary)
+
     def _browse_ffmpeg_path(self):
         """Open file browser for FFmpeg binary."""
         path, _ = QFileDialog.getOpenFileName(self, "Select FFmpeg Binary")
@@ -609,6 +706,7 @@ class SettingsView(QWidget):
             self.config["enable_musicbrainz_lookup"] = self.musicbrainz_check.isChecked()
             self.config["auto_backup"] = self.backup_check.isChecked()
             self.config["max_backups"] = self._safe_int(self.max_backups_input.text(), 10)
+            self.config["auto_redownload_corrupted"] = self.auto_redownload_check.isChecked()
             self.config["ffmpeg_path"] = self.ffmpeg_path_input.text().strip()
             self.config["ytdlp_path"] = self.ytdlp_path_input.text().strip()
 

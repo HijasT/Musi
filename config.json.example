@@ -11,6 +11,7 @@
   "auto_cleanup": false,
   "auto_backup": true,
   "max_backups": 10,
+  "auto_redownload_corrupted": true,
   "profile": "light",
   "exportify_watch_folder": "data/exportify",
 

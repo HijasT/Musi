@@ -61,7 +61,7 @@ def view_config(config: dict):
         "File Paths": ["tracks_file", "playlists_file", "output_dir", "exportify_watch_folder"],
         "Download Settings": ["audio_format", "sleep_between", "average_download_time"],
         "Retry Settings": ["retry_attempts", "retry_delay"],
-        "Automation": ["auto_cleanup", "auto_backup", "max_backups", "auto_sync_enabled", "auto_sync_interval"],
+        "Automation": ["auto_cleanup", "auto_backup", "max_backups", "auto_redownload_corrupted", "auto_sync_enabled", "auto_sync_interval"],
         "Profile": ["profile"]
     }
     
@@ -193,6 +193,7 @@ def toggle_automation_menu(config: dict) -> dict:
     automation_settings = [
         ("auto_cleanup", "Auto-cleanup after downloads"),
         ("auto_backup", "Auto-backup JSON files"),
+        ("auto_redownload_corrupted", "Auto-redownload corrupted files"),
         ("auto_sync_enabled", "Auto-sync exportify folder")
     ]
     
