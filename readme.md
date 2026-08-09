@@ -1,26 +1,26 @@
 
 <p align="center">
-  <img src="images/musi_logo.png" alt="Musi logo" width="128" height="128">
+  <img src="images/chaosmd_logo.png" alt="Chaos Media Downloader logo" width="128" height="128">
 </p>
 
-<h1 align="center">Musi</h1>
+<h1 align="center">Chaos Media Downloader</h1>
 
 <p align="center">
-A Python tool for downloading music from Spotify and YouTube using <strong>yt-dlp</strong>.<br>
+A Python tool for downloading music from Spotify and YouTube, or video from hundreds of other sites, using <strong>yt-dlp</strong>.<br>
 Available as a standalone executable, desktop GUI application, or command-line interface.
 </p>
 
-Musi is a fork of [Harmoni](https://github.com/Ssenseii/harmoni) by [Ssenseii](https://github.com/Ssenseii), redesigned with a new dark "Tape Deck" interface (charcoal-black with a green accent, replacing the original purple theme) and extended with new features. All credit for the original project goes to its author — see [LICENSE](LICENSE) for the MIT terms this fork keeps.
+Chaos Media Downloader (formerly Musi) is a fork of [Harmoni](https://github.com/Ssenseii/harmoni) by [Ssenseii](https://github.com/Ssenseii), redesigned with a dark "Tape Deck" interface (charcoal-black with a green accent, replacing the original purple theme) and extended with new features. All credit for the original project goes to its author — see [LICENSE](LICENSE) for the MIT terms this fork keeps.
 
 ## What's different from Harmoni
 
 - **Redesigned GUI and logo** — a charcoal-black "Tape Deck" theme with a green accent, condensed display type, chip-style status badges in the download queue, and a new twin-reel logo, replacing the original dark-purple interface.
 - **320kbps downloads** — a new `audio_bitrate` setting (default `320k`) controls download quality, editable from Settings or the CLI's "Choose audio bitrate" tool.
 - **Convert your library with ffmpeg** — convert already-downloaded files to a different format/bitrate in bulk, from Settings → Library Maintenance or the CLI's "Convert audio format" tool.
-- **Download history & duplicate protection** — every download is logged to `data/download_history.json` by canonical artist/track, independent of the file. If a track was downloaded before but is no longer in your library, Musi asks before re-downloading it instead of silently redoing the work.
+- **Download history & duplicate protection** — every download is logged to `data/download_history.json` by canonical artist/track, independent of the file. If a track was downloaded before but is no longer in your library, you're asked before re-downloading it instead of silently redoing the work.
 - **Auto-redownload corrupted files** — library cleanup no longer just deletes broken/empty audio files; it automatically re-queues a redownload for each one (toggle via `auto_redownload_corrupted`).
 - **Auto-fetched lyrics** — plain lyrics are pulled from [lrclib.net](https://lrclib.net) (no API key needed) and embedded alongside the rest of the track's metadata, toggle via `enable_lyrics_fetch`.
-- **In-app update checker** — Musi checks GitHub Releases in the background on launch and prompts to open the download page if a newer version is out.
+- **In-app update checker** — checks GitHub Releases in the background on launch and prompts to open the download page if a newer version is out.
 - **Favorites** — save a link or search under a name for one-click re-download later, without re-typing or re-navigating.
 - **Video downloads** — download the actual video (not just audio) from YouTube, TikTok, Instagram, Twitter/X, Reddit, Twitch, and hundreds of other yt-dlp-supported sites, kept separate from the music library.
 
@@ -56,10 +56,10 @@ See [changelog.md](changelog.md) for the full history inherited from Harmoni.
 
 ### Option 1: Standalone Executable (Easiest)
 
-Download from the [Releases](https://github.com/HijasT/Musi/releases) page:
+Download from the [Releases](https://github.com/HijasT/ChaosMD/releases) page:
 
-- **Windows**: `Musi.exe` — double-click to run
-- **macOS**: `Musi-macos-arm64.dmg` (Apple Silicon) — open the DMG and drag Musi to Applications
+- **Windows**: `ChaosMD.exe` — double-click to run
+- **macOS**: `ChaosMD-macos-arm64.dmg` (Apple Silicon) — open the DMG and drag ChaosMD to Applications
 
 No Python installation required. FFmpeg is bundled.
 
@@ -69,8 +69,8 @@ See [Standalone Guide](docs/guides/standalone.md) for details.
 
 ```bash
 # Clone and install
-git clone https://github.com/HijasT/Musi.git
-cd Musi
+git clone https://github.com/HijasT/ChaosMD.git
+cd ChaosMD
 pip install -r requirements.txt
 
 # Run the GUI
@@ -96,7 +96,7 @@ chmod +x build-macos.sh
 ./build-macos.sh
 ```
 
-This produces a `Musi-macos-<arch>.dmg` with ffmpeg bundled.
+This produces a `ChaosMD-macos-<arch>.dmg` with ffmpeg bundled.
 
 ## Quick Start
 
@@ -104,10 +104,10 @@ This produces a `Musi-macos-<arch>.dmg` with ffmpeg bundled.
 
 The easiest way to download your Spotify music:
 
-1. Launch Musi (exe, app, or `python gui_main.py`)
+1. Launch Chaos Media Downloader (exe, app, or `python gui_main.py`)
 2. Go to [exportify.net](https://exportify.net) and log in with Spotify
 3. Export your playlists as CSV files
-4. Drag and drop the CSV into Musi
+4. Drag and drop the CSV into the app
 
 No Spotify API setup required!
 
@@ -144,4 +144,4 @@ MIT License - see [LICENSE](LICENSE) for details. Original work Copyright (c) 20
 
 ## Disclaimer
 
-This tool is for **personal use only**. Respect copyright laws and YouTube's terms of service.
+This tool is for **personal use only**. Respect copyright laws and platform terms of service.
