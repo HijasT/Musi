@@ -1,1 +1,1 @@
-"""HARMONI Desktop GUI package."""
+"""Musi Desktop GUI package."""

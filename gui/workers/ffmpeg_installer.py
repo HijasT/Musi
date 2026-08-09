@@ -65,7 +65,7 @@ class FFmpegInstallerWorker(QThread):
                 # Download FFmpeg
                 self.progress.emit(5, "Connecting to download server...")
 
-                request = Request(url, headers={"User-Agent": "HARMONI/1.0"})
+                request = Request(url, headers={"User-Agent": "Musi/1.0"})
                 response = urlopen(request, timeout=30)
 
                 # Get file size if available

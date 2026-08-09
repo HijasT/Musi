@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, Signal
 
 from gui.workers.download_queue import DownloadQueue
+from gui.styles import COLORS
 
 
 class DropZone(QFrame):
@@ -32,10 +33,10 @@ class DropZone(QFrame):
 
         # Upload icon using text
         icon = QLabel("+")
-        icon.setStyleSheet("""
+        icon.setStyleSheet(f"""
             font-size: 48px;
             font-weight: 300;
-            color: #6a6a80;
+            color: {COLORS["text_muted"]};
             background: transparent;
         """)
         icon.setAlignment(Qt.AlignCenter)
@@ -105,7 +106,7 @@ class StepCard(QFrame):
     def __init__(self, number: int, title: str, description: str, parent=None):
         super().__init__(parent)
         self.setObjectName("card")
-        self.setStyleSheet("StepCard { background-color: #282840; }")
+        self.setStyleSheet(f"StepCard {{ background-color: {COLORS['background_light']}; }}")
         self._setup_ui(number, title, description)
 
     def _setup_ui(self, number: int, title: str, description: str):
@@ -117,9 +118,9 @@ class StepCard(QFrame):
         number_label = QLabel(str(number))
         number_label.setFixedSize(40, 40)
         number_label.setAlignment(Qt.AlignCenter)
-        number_label.setStyleSheet("""
-            background-color: #3c92de;
-            color: white;
+        number_label.setStyleSheet(f"""
+            background-color: {COLORS["accent"]};
+            color: {COLORS["background_dark"]};
             font-size: 18px;
             font-weight: 700;
             border-radius: 20px;
@@ -213,7 +214,7 @@ class WelcomeView(QWidget):
         header = QVBoxLayout()
         header.setSpacing(12)
 
-        title = QLabel("Welcome to HARMONI")
+        title = QLabel("Welcome to Musi")
         title.setObjectName("title")
         title.setStyleSheet("font-size: 32px; font-weight: 700;")
         header.addWidget(title)
@@ -238,15 +239,15 @@ class WelcomeView(QWidget):
         easiest_header = QHBoxLayout()
 
         easiest_title = QLabel("Easiest Way to Download Your Spotify Music")
-        easiest_title.setStyleSheet("font-size: 20px; font-weight: 700; color: #3c92de;")
+        easiest_title.setStyleSheet(f"font-size: 20px; font-weight: 700; color: {COLORS['accent']};")
         easiest_header.addWidget(easiest_title)
 
         easiest_header.addStretch()
 
         easiest_badge = QLabel("RECOMMENDED")
-        easiest_badge.setStyleSheet("""
-            background-color: #3c92de;
-            color: white;
+        easiest_badge.setStyleSheet(f"""
+            background-color: {COLORS["accent"]};
+            color: {COLORS["background_dark"]};
             font-size: 11px;
             font-weight: 700;
             padding: 4px 12px;
@@ -317,21 +318,21 @@ class WelcomeView(QWidget):
         link_layout.setSpacing(12)
 
         exportify_btn = QPushButton("\u2197  Open exportify.net")
-        exportify_btn.setStyleSheet("""
-            QPushButton {
+        exportify_btn.setStyleSheet(f"""
+            QPushButton {{
                 background-color: rgba(255, 255, 255, 0.12);
-                color: #e3e4e0;
+                color: {COLORS["text"]};
                 border: 1px solid rgba(255, 255, 255, 0.2);
                 padding: 10px 20px;
                 border-radius: 6px;
                 font-weight: 600;
                 font-size: 13px;
-            }
-            QPushButton:hover {
+            }}
+            QPushButton:hover {{
                 background-color: rgba(255, 255, 255, 0.2);
                 border-color: rgba(255, 255, 255, 0.35);
-            }
-            QPushButton:pressed { background-color: rgba(255, 255, 255, 0.08); }
+            }}
+            QPushButton:pressed {{ background-color: rgba(255, 255, 255, 0.08); }}
         """)
         exportify_btn.setCursor(Qt.PointingHandCursor)
         exportify_btn.clicked.connect(self._open_exportify)
@@ -360,7 +361,7 @@ class WelcomeView(QWidget):
 
         or_label = QLabel("OR USE OTHER METHODS")
         or_label.setObjectName("sectionSmall")
-        or_label.setStyleSheet("font-size: 12px; color: #6a6a80;")
+        or_label.setStyleSheet(f"font-size: 12px; color: {COLORS['text_muted']};")
         divider_layout.addWidget(or_label)
 
         right_line = QFrame()
@@ -427,9 +428,9 @@ class WelcomeView(QWidget):
             warning_icon = QLabel("!")
             warning_icon.setFixedSize(32, 32)
             warning_icon.setAlignment(Qt.AlignCenter)
-            warning_icon.setStyleSheet("""
-                background-color: #ff9800;
-                color: white;
+            warning_icon.setStyleSheet(f"""
+                background-color: {COLORS["warning"]};
+                color: {COLORS["background_dark"]};
                 font-size: 18px;
                 font-weight: 700;
                 border-radius: 16px;

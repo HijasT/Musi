@@ -1,4 +1,4 @@
-"""Icon management for HARMONI GUI."""
+"""Icon management for Musi GUI."""
 
 import os
 import sys

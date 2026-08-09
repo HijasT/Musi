@@ -1,29 +1,37 @@
-"""QSS Stylesheets for HARMONI GUI dark theme."""
+"""QSS Stylesheets for Musi GUI — "Tape Deck" dark theme."""
 
-# Color palette
+# Color palette — charcoal-black neutrals, teal-green as the single accent.
+# Success uses a separate olive-green so status chips stay distinguishable from
+# interactive accent elements (buttons, selection) even though both read "green".
 COLORS = {
-    "background": "#2e2e45",
-    "background_light": "#383852",
-    "background_dark": "#252538",
-    "background_card": "#343449",
-    "sidebar": "#282840",
-    "text": "#e3e4e0",
-    "text_secondary": "#9a9ab0",
-    "text_muted": "#6a6a80",
-    "accent": "#3c92de",
-    "accent_hover": "#4da3ef",
-    "accent_pressed": "#2b81cd",
-    "accent_muted": "rgba(60, 146, 222, 0.15)",
-    "success": "#4caf50",
-    "success_muted": "rgba(76, 175, 80, 0.15)",
-    "error": "#ef5350",
-    "error_muted": "rgba(239, 83, 80, 0.15)",
-    "warning": "#ff9800",
-    "warning_muted": "rgba(255, 152, 0, 0.15)",
-    "border": "#454560",
-    "border_light": "#505070",
-    "input_bg": "#323248",
+    "background": "#17181a",
+    "background_light": "#292a2e",
+    "background_dark": "#101113",
+    "background_card": "#1f2023",
+    "sidebar": "#101113",
+    "text": "#ececea",
+    "text_secondary": "#96979c",
+    "text_muted": "#6b6c70",
+    "accent": "#3aa17a",
+    "accent_hover": "#4bb78d",
+    "accent_pressed": "#2f8a67",
+    "accent_muted": "rgba(58, 161, 122, 0.15)",
+    "success": "#8fae5a",
+    "success_muted": "rgba(143, 174, 90, 0.15)",
+    "error": "#c4573f",
+    "error_muted": "rgba(196, 87, 63, 0.15)",
+    "warning": "#d4ad4a",
+    "warning_muted": "rgba(212, 173, 74, 0.15)",
+    "border": "#34363b",
+    "border_light": "#454850",
+    "input_bg": "#1c1d20",
 }
+
+# Condensed/mechanical display face for chrome (titles, section headers),
+# a humanist body face for everything else, and monospace for numbers that move.
+FONT_DISPLAY = "'Bahnschrift', 'Arial Narrow', 'Segoe UI', sans-serif"
+FONT_BODY = "'Segoe UI', 'Helvetica Neue', Arial, sans-serif"
+FONT_MONO = "'Cascadia Mono', 'Consolas', 'Courier New', monospace"
 
 DARK_THEME = f"""
 /* ===================== GLOBAL ===================== */
@@ -34,7 +42,7 @@ QMainWindow {{
 QWidget {{
     background-color: {COLORS["background"]};
     color: {COLORS["text"]};
-    font-family: 'Helvetica Neue', 'Segoe UI', Arial;
+    font-family: {FONT_BODY};
     font-size: 14px;
 }}
 
@@ -45,8 +53,10 @@ QWidget#titleBar {{
 }}
 
 QLabel#titleLabel {{
+    font-family: {FONT_DISPLAY};
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 700;
+    letter-spacing: 1px;
     color: {COLORS["text"]};
     padding-left: 8px;
 }}
@@ -106,13 +116,13 @@ QListWidget#sidebar::item:hover {{
 
 QListWidget#sidebar::item:selected {{
     background-color: {COLORS["accent"]};
-    color: white;
+    color: {COLORS["background_dark"]};
 }}
 
 /* ===================== BUTTONS ===================== */
 QPushButton {{
     background-color: {COLORS["accent"]};
-    color: white;
+    color: {COLORS["background_dark"]};
     border: none;
     padding: 8px 16px;
     border-radius: 6px;
@@ -152,15 +162,16 @@ QPushButton#secondary:disabled {{
 
 QPushButton#accent {{
     background-color: {COLORS["accent"]};
-    color: white;
+    color: {COLORS["background_dark"]};
 }}
 
 QPushButton#danger {{
     background-color: {COLORS["error"]};
+    color: white;
 }}
 
 QPushButton#danger:hover {{
-    background-color: #ff6b6b;
+    background-color: #d4694f;
 }}
 
 QPushButton#danger:disabled {{
@@ -170,10 +181,11 @@ QPushButton#danger:disabled {{
 
 QPushButton#success {{
     background-color: {COLORS["success"]};
+    color: {COLORS["background_dark"]};
 }}
 
 QPushButton#success:hover {{
-    background-color: #5cc05c;
+    background-color: #93ba7e;
 }}
 
 QPushButton#ghost {{
@@ -394,10 +406,11 @@ QLabel {{
 }}
 
 QLabel#title {{
+    font-family: {FONT_DISPLAY};
     font-size: 32px;
     font-weight: 700;
     color: {COLORS["text"]};
-    letter-spacing: -0.5px;
+    letter-spacing: 0px;
 }}
 
 QLabel#subtitle {{
@@ -408,6 +421,7 @@ QLabel#subtitle {{
 }}
 
 QLabel#section {{
+    font-family: {FONT_DISPLAY};
     font-size: 18px;
     font-weight: 600;
     color: {COLORS["text"]};
@@ -548,25 +562,25 @@ QFrame#card:hover {{
 
 QFrame#cardAccent {{
     background-color: {COLORS["accent_muted"]};
-    border: 1px solid rgba(60, 146, 222, 0.3);
+    border: 1px solid rgba(58, 161, 122, 0.3);
     border-radius: 12px;
 }}
 
 QFrame#cardSuccess {{
     background-color: {COLORS["success_muted"]};
-    border: 1px solid rgba(76, 175, 80, 0.3);
+    border: 1px solid rgba(127, 166, 107, 0.3);
     border-radius: 12px;
 }}
 
 QFrame#cardWarning {{
     background-color: {COLORS["warning_muted"]};
-    border: 1px solid rgba(255, 152, 0, 0.3);
+    border: 1px solid rgba(212, 173, 74, 0.3);
     border-radius: 12px;
 }}
 
 QFrame#cardError {{
     background-color: {COLORS["error_muted"]};
-    border: 1px solid rgba(239, 83, 80, 0.3);
+    border: 1px solid rgba(196, 87, 63, 0.3);
     border-radius: 12px;
 }}
 
@@ -597,6 +611,7 @@ QFrame#divider {{
 
 /* ===================== STATS BADGE ===================== */
 QLabel#statValue {{
+    font-family: {FONT_MONO};
     font-size: 24px;
     font-weight: 700;
     color: {COLORS["text"]};
@@ -607,6 +622,51 @@ QLabel#statLabel {{
     color: {COLORS["text_muted"]};
     text-transform: uppercase;
     letter-spacing: 0.5px;
+}}
+
+/* ===================== STATUS CHIPS ===================== */
+QLabel#chipQueued {{
+    background-color: {COLORS["background_light"]};
+    color: {COLORS["text_secondary"]};
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    border-radius: 4px;
+    padding: 3px 8px;
+}}
+
+QLabel#chipDownloading {{
+    background-color: {COLORS["accent_muted"]};
+    color: {COLORS["accent"]};
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    border-radius: 4px;
+    padding: 3px 8px;
+}}
+
+QLabel#chipDone {{
+    background-color: {COLORS["success_muted"]};
+    color: {COLORS["success"]};
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    border-radius: 4px;
+    padding: 3px 8px;
+}}
+
+QLabel#chipFailed {{
+    background-color: {COLORS["error_muted"]};
+    color: {COLORS["error"]};
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    border-radius: 4px;
+    padding: 3px 8px;
 }}
 
 /* ===================== SCROLL AREA ===================== */

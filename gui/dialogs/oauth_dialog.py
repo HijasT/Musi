@@ -32,7 +32,7 @@ class CallbackHandler(BaseHTTPRequestHandler):
         html = """
         <html>
         <head>
-            <title>HARMONI - Spotify Auth</title>
+            <title>Musi - Spotify Auth</title>
             <style>
                 body {
                     font-family: 'Segoe UI', Arial, sans-serif;
@@ -55,7 +55,7 @@ class CallbackHandler(BaseHTTPRequestHandler):
         <body>
             <div class="container">
                 <h1>Authentication Successful!</h1>
-                <p>You can close this window and return to HARMONI.</p>
+                <p>You can close this window and return to Musi.</p>
             </div>
         </body>
         </html>

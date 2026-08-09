@@ -7,10 +7,36 @@ from PySide6.QtWidgets import (
     QAbstractItemView, QFrame, QSpacerItem, QSizePolicy
 )
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QColor
 
 from gui.workers.download_queue import DownloadQueue, DownloadStatus
 from gui.workers.download_worker import DownloadWorker
+from gui.styles import COLORS
+
+# status -> (chip QSS object name, display label)
+STATUS_CHIP = {
+    DownloadStatus.PENDING: ("chipQueued", "Queued"),
+    DownloadStatus.DOWNLOADING: ("chipDownloading", "Downloading"),
+    DownloadStatus.COMPLETED: ("chipDone", "Done"),
+    DownloadStatus.FAILED: ("chipFailed", "Failed"),
+    DownloadStatus.CANCELLED: ("chipQueued", "Cancelled"),
+}
+
+
+def make_status_chip(status: DownloadStatus) -> QWidget:
+    """Build a left-aligned chip badge widget for a queue item's status."""
+    object_name, label = STATUS_CHIP[status]
+
+    chip = QLabel(label)
+    chip.setObjectName(object_name)
+
+    container = QWidget()
+    container.setStyleSheet("background: transparent;")
+    layout = QHBoxLayout(container)
+    layout.setContentsMargins(8, 0, 8, 0)
+    layout.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+    layout.addWidget(chip)
+
+    return container
 
 
 class StatCard(QFrame):
@@ -83,13 +109,13 @@ class DownloadsView(QWidget):
         stats_layout = QHBoxLayout()
         stats_layout.setSpacing(12)
 
-        self.pending_card = StatCard("0", "PENDING", "#3c92de")
+        self.pending_card = StatCard("0", "PENDING", COLORS["accent"])
         stats_layout.addWidget(self.pending_card)
 
-        self.completed_card = StatCard("0", "COMPLETED", "#4caf50")
+        self.completed_card = StatCard("0", "COMPLETED", COLORS["success"])
         stats_layout.addWidget(self.completed_card)
 
-        self.failed_card = StatCard("0", "FAILED", "#ef5350")
+        self.failed_card = StatCard("0", "FAILED", COLORS["error"])
         stats_layout.addWidget(self.failed_card)
 
         header.addLayout(stats_layout)
@@ -180,7 +206,7 @@ class DownloadsView(QWidget):
         progress_layout.addWidget(self.overall_progress, 1)
 
         self.progress_text = QLabel("0%")
-        self.progress_text.setStyleSheet("font-weight: 600; color: #3c92de; background: transparent;")
+        self.progress_text.setStyleSheet(f"font-weight: 600; color: {COLORS['accent']}; background: transparent;")
         progress_layout.addWidget(self.progress_text)
 
         layout.addWidget(progress_frame)
@@ -203,8 +229,7 @@ class DownloadsView(QWidget):
         self.table.setItem(row, 1, QTableWidgetItem(item.track))
         self.table.setItem(row, 2, QTableWidgetItem(item.playlist or "—"))
 
-        status_item = QTableWidgetItem(item.status.value.title())
-        self.table.setItem(row, 3, status_item)
+        self.table.setCellWidget(row, 3, make_status_chip(item.status))
 
         progress = QProgressBar()
         progress.setMinimum(0)
@@ -219,17 +244,7 @@ class DownloadsView(QWidget):
     def _on_item_updated(self, item):
         for row in range(self.table.rowCount()):
             if self.table.item(row, 0).data(Qt.UserRole) == item.id:
-                status_item = self.table.item(row, 3)
-                status_item.setText(item.status.value.title())
-
-                if item.status == DownloadStatus.COMPLETED:
-                    status_item.setForeground(QColor("#4caf50"))
-                elif item.status == DownloadStatus.FAILED:
-                    status_item.setForeground(QColor("#ef5350"))
-                elif item.status == DownloadStatus.DOWNLOADING:
-                    status_item.setForeground(QColor("#3c92de"))
-                else:
-                    status_item.setForeground(QColor("#9a9ab0"))
+                self.table.setCellWidget(row, 3, make_status_chip(item.status))
 
                 progress = self.table.cellWidget(row, 4)
                 if progress:

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-HARMONI Desktop GUI - Main Entry Point
+Musi Desktop GUI - Main Entry Point
 
-This is the GUI version of the HARMONI music downloader.
+This is the GUI version of the Musi music downloader.
 For the CLI version, use main.py instead.
 """
 
@@ -107,7 +107,7 @@ def configure_bundled_binaries():
 
     # macOS: also check user-writable location where the installer puts binaries
     if sys.platform == 'darwin':
-        user_bin = os.path.join(os.path.expanduser("~/Library/Application Support/HARMONI"), "bin")
+        user_bin = os.path.join(os.path.expanduser("~/Library/Application Support/Musi"), "bin")
         if os.path.isdir(user_bin) and user_bin not in paths_to_add:
             paths_to_add.append(user_bin)
 
@@ -151,7 +151,7 @@ def main():
     if sys.platform == 'win32':
         try:
             import ctypes
-            app_id = 'harmoni.musicdownloader.gui.1'
+            app_id = 'musi.musicdownloader.gui.1'
             ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(app_id)
         except Exception:
             pass
@@ -174,9 +174,9 @@ def main():
 
     # Create application
     app = QApplication(sys.argv)
-    app.setApplicationName("HARMONI")
-    app.setApplicationDisplayName("HARMONI - Music Downloader")
-    app.setOrganizationName("HARMONI")
+    app.setApplicationName("Musi")
+    app.setApplicationDisplayName("Musi")
+    app.setOrganizationName("Musi")
 
     # Create config if needed
     create_default_config()

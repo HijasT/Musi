@@ -11,7 +11,7 @@ class AboutDialog(QDialog):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("About HARMONI")
+        self.setWindowTitle("About Musi")
         self.setFixedSize(400, 300)
         self.setModal(True)
 
@@ -24,7 +24,7 @@ class AboutDialog(QDialog):
         layout.setContentsMargins(30, 30, 30, 30)
 
         # Title
-        title = QLabel("HARMONI")
+        title = QLabel("Musi")
         title.setObjectName("title")
         title.setAlignment(Qt.AlignCenter)
         layout.addWidget(title)

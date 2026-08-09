@@ -1,4 +1,4 @@
-"""Main window with custom title bar and sidebar navigation for HARMONI GUI."""
+"""Main window with custom title bar and sidebar navigation for Musi GUI."""
 
 from PySide6.QtWidgets import (
     QMainWindow, QWidget, QHBoxLayout, QVBoxLayout,
@@ -14,6 +14,7 @@ from gui.views.youtube_view import YouTubeView
 from gui.views.downloads_view import DownloadsView
 from gui.views.settings_view import SettingsView
 from gui.workers.download_queue import DownloadQueue
+from gui.styles import COLORS, FONT_DISPLAY, FONT_MONO
 
 
 class TitleBar(QWidget):
@@ -46,22 +47,24 @@ class TitleBar(QWidget):
             layout.addWidget(icon_label)
 
         # App name with version badge
-        self.title_label = QLabel("HARMONI")
-        self.title_label.setStyleSheet("""
+        self.title_label = QLabel("MUSI")
+        self.title_label.setStyleSheet(f"""
+            font-family: {FONT_DISPLAY};
             font-size: 15px;
             font-weight: 700;
-            color: #e3e4e0;
-            letter-spacing: 1px;
+            color: {COLORS["text"]};
+            letter-spacing: 2px;
         """)
         layout.addWidget(self.title_label)
 
         # Version badge
-        version_label = QLabel("v0.5")
-        version_label.setStyleSheet("""
+        version_label = QLabel("v1.0")
+        version_label.setStyleSheet(f"""
+            font-family: {FONT_MONO};
             font-size: 10px;
             font-weight: 600;
-            color: #9a9ab0;
-            background-color: #383852;
+            color: {COLORS["accent"]};
+            background-color: {COLORS["background_light"]};
             padding: 2px 6px;
             border-radius: 4px;
         """)
@@ -74,18 +77,18 @@ class TitleBar(QWidget):
         self.min_btn.setText("-")
         self.min_btn.setObjectName("titleBarBtn")
         self.min_btn.setFixedSize(46, 40)
-        self.min_btn.setStyleSheet("""
-            QPushButton {
+        self.min_btn.setStyleSheet(f"""
+            QPushButton {{
                 font-size: 18px;
                 font-weight: 400;
                 border: none;
                 background: transparent;
-                color: #9a9ab0;
-            }
-            QPushButton:hover {
-                background-color: #383852;
-                color: #e3e4e0;
-            }
+                color: {COLORS["text_secondary"]};
+            }}
+            QPushButton:hover {{
+                background-color: {COLORS["background_light"]};
+                color: {COLORS["text"]};
+            }}
         """)
         self.min_btn.clicked.connect(self._minimize)
         layout.addWidget(self.min_btn)
@@ -94,18 +97,18 @@ class TitleBar(QWidget):
         self.max_btn.setText("[ ]")
         self.max_btn.setObjectName("titleBarBtn")
         self.max_btn.setFixedSize(46, 40)
-        self.max_btn.setStyleSheet("""
-            QPushButton {
+        self.max_btn.setStyleSheet(f"""
+            QPushButton {{
                 font-size: 11px;
                 font-weight: 600;
                 border: none;
                 background: transparent;
-                color: #9a9ab0;
-            }
-            QPushButton:hover {
-                background-color: #383852;
-                color: #e3e4e0;
-            }
+                color: {COLORS["text_secondary"]};
+            }}
+            QPushButton:hover {{
+                background-color: {COLORS["background_light"]};
+                color: {COLORS["text"]};
+            }}
         """)
         self.max_btn.clicked.connect(self._toggle_maximize)
         layout.addWidget(self.max_btn)
@@ -114,18 +117,18 @@ class TitleBar(QWidget):
         self.close_btn.setText("X")
         self.close_btn.setObjectName("closeBtn")
         self.close_btn.setFixedSize(46, 40)
-        self.close_btn.setStyleSheet("""
-            QPushButton {
+        self.close_btn.setStyleSheet(f"""
+            QPushButton {{
                 font-size: 13px;
                 font-weight: 700;
                 border: none;
                 background: transparent;
-                color: #9a9ab0;
-            }
-            QPushButton:hover {
-                background-color: #ef5350;
+                color: {COLORS["text_secondary"]};
+            }}
+            QPushButton:hover {{
+                background-color: {COLORS["error"]};
                 color: white;
-            }
+            }}
         """)
         self.close_btn.clicked.connect(self._close)
         layout.addWidget(self.close_btn)
@@ -186,7 +189,7 @@ class MainWindow(QMainWindow):
         self.setWindowFlags(Qt.FramelessWindowHint)
         self.setAttribute(Qt.WA_TranslucentBackground, False)
 
-        self.setWindowTitle("HARMONI")
+        self.setWindowTitle("Musi")
         self.setMinimumSize(600, 400)
         self.resize(1200, 700)
 
@@ -345,7 +348,7 @@ class MainWindow(QMainWindow):
         """Update Spotify connection status."""
         if connected:
             self.spotify_status_label.setText("Spotify: Connected")
-            self.spotify_status_label.setStyleSheet("color: #4caf50;")
+            self.spotify_status_label.setStyleSheet(f"color: {COLORS['success']};")
         else:
             self.spotify_status_label.setText("Spotify: Not connected")
             self.spotify_status_label.setStyleSheet("")
