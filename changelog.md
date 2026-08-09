@@ -2,7 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [1.5.0] - 2026-08-10
+
+### Changed
+- **GUI navigation restructure**: Exportify moved out of Home into its own sidebar tab; the YouTube tab's separate track/video sections were merged into a single URL field with a Music/Video toggle instead of two side-by-side forms; Home now shows live "music downloaded" / "videos downloaded" stat cards plus quick-navigation cards to every tab (Exportify, Spotify, YouTube, Downloads, Settings).
+
+### Added
+- **Video output settings**: a dedicated video output directory (with browse picker), a video container format choice (mp4/mkv/webm), and a subtitle-embedding toggle in Settings — `downloader/video_downloader.py` now reads the configured format instead of hardcoding mp4.
+- **Settings → About & Updates**: shows the running version, a manual "Check for Updates" button (reuses the GitHub Releases update checker on demand instead of only at launch), and an "Open GitHub Repository" link.
+- `managers/history_manager.py` now tracks video downloads (`log_video_download`) alongside audio, and exposes `get_stats()` for the new Home stat cards.
+
+## [1.4.0] - 2026-08-10
 
 ### Changed
 - **Renamed to Chaos Media Downloader** (was Musi): the GitHub repo moved from `HijasT/Musi` to `HijasT/ChaosMD`, and every user-facing string, internal identifier, and build artifact was updated to match — window/taskbar title, About dialog, macOS support-folder path, User-Agent strings, PyInstaller output (`ChaosMD.exe`/`.app`/release archives), and `constants.GITHUB_REPO`. The logo, theme, and all functionality are unchanged.
