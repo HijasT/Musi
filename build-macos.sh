@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-echo "=== HARMONI macOS Build ==="
+echo "=== Musi macOS Build ==="
 
 # Check we're on macOS
 if [[ "$(uname)" != "Darwin" ]]; then
@@ -58,7 +58,7 @@ sips -z 256 256   gui/resources/icons/app/app_icon.png --out icon.iconset/icon_2
 sips -z 512 512   gui/resources/icons/app/app_icon.png --out icon.iconset/icon_256x256@2x.png
 sips -z 512 512   gui/resources/icons/app/app_icon.png --out icon.iconset/icon_512x512.png
 sips -z 1024 1024 gui/resources/icons/app/app_icon.png --out icon.iconset/icon_512x512@2x.png
-iconutil -c icns icon.iconset -o HARMONI.icns
+iconutil -c icns icon.iconset -o Musi.icns
 
 # Build with PyInstaller
 # Do not add --strip here: bin/yt-dlp is itself a PyInstaller onefile binary whose
@@ -66,10 +66,10 @@ iconutil -c icns icon.iconset -o HARMONI.icns
 # leaving a bootloader stub that exits 255 on every run.
 echo "=== Building with PyInstaller ==="
 pyinstaller \
-    --name "HARMONI" \
+    --name "Musi" \
     --windowed \
     --onedir \
-    --icon HARMONI.icns \
+    --icon Musi.icns \
     --add-data "gui/resources/icons:gui/resources/icons" \
     --add-binary "bin/ffmpeg:bin" \
     --add-binary "bin/ffprobe:bin" \
@@ -82,24 +82,24 @@ pyinstaller \
 echo "=== Creating DMG ==="
 rm -rf dmg_contents
 mkdir -p dmg_contents
-if [ -d "dist/HARMONI.app" ]; then
-    cp -r dist/HARMONI.app dmg_contents/
+if [ -d "dist/Musi.app" ]; then
+    cp -r dist/Musi.app dmg_contents/
 else
-    cp -r dist/HARMONI dmg_contents/
+    cp -r dist/Musi dmg_contents/
 fi
 
 # Add Applications symlink so users can drag to install
 ln -s /Applications dmg_contents/Applications
 
-DMG_NAME="HARMONI-macos-${ARCH}.dmg"
-hdiutil create -volname "HARMONI" -srcfolder dmg_contents -ov -format UDZO "$DMG_NAME"
+DMG_NAME="Musi-macos-${ARCH}.dmg"
+hdiutil create -volname "Musi" -srcfolder dmg_contents -ov -format UDZO "$DMG_NAME"
 
 # Cleanup build artifacts
-rm -rf build icon.iconset dmg_contents HARMONI.icns bin
+rm -rf build icon.iconset dmg_contents Musi.icns bin
 
 echo ""
 echo "=== Build complete ==="
 echo "Output: $DMG_NAME"
 echo ""
-echo "To install: open the DMG and drag HARMONI to Applications."
+echo "To install: open the DMG and drag Musi to Applications."
 echo "On first launch, right-click > Open to bypass Gatekeeper."
