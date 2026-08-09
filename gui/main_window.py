@@ -9,6 +9,7 @@ from PySide6.QtCore import Qt, QSize, QPoint, QUrl
 from PySide6.QtGui import QIcon, QMouseEvent, QDesktopServices
 
 from gui.views.welcome_view import WelcomeView
+from gui.views.exportify_view import ExportifyView
 from gui.views.spotify_view import SpotifyView
 from gui.views.youtube_view import YouTubeView
 from gui.views.downloads_view import DownloadsView
@@ -268,6 +269,7 @@ class MainWindow(QMainWindow):
         # Navigation items - clean text labels without emojis
         nav_items = [
             "Home",
+            "Exportify",
             "Spotify",
             "YouTube",
             "Downloads",
@@ -288,6 +290,7 @@ class MainWindow(QMainWindow):
         """Create and add all views to the stack."""
         # Create views
         self.welcome_view = WelcomeView(self.config, self.download_queue)
+        self.exportify_view = ExportifyView(self.config, self.download_queue)
         self.spotify_view = SpotifyView(self.config, self.download_queue)
         self.youtube_view = YouTubeView(self.config, self.download_queue)
         self.downloads_view = DownloadsView(self.config, self.download_queue)
@@ -295,6 +298,7 @@ class MainWindow(QMainWindow):
 
         # Add views to stack (order matches sidebar)
         self.view_stack.addWidget(self.welcome_view)
+        self.view_stack.addWidget(self.exportify_view)
         self.view_stack.addWidget(self.spotify_view)
         self.view_stack.addWidget(self.youtube_view)
         self.view_stack.addWidget(self.downloads_view)
@@ -348,8 +352,9 @@ class MainWindow(QMainWindow):
         # Spotify connection status
         self.spotify_view.connection_changed.connect(self._update_spotify_status)
 
-        # Welcome view navigation
+        # Welcome/Exportify view navigation
         self.welcome_view.navigate_to.connect(self._navigate_to_view)
+        self.exportify_view.navigate_to.connect(self._navigate_to_view)
 
     def _on_nav_changed(self, index: int):
         """Handle sidebar navigation change."""
@@ -359,10 +364,11 @@ class MainWindow(QMainWindow):
         """Navigate to a specific view by name."""
         view_map = {
             "welcome": 0,
-            "spotify": 1,
-            "youtube": 2,
-            "downloads": 3,
-            "settings": 4,
+            "exportify": 1,
+            "spotify": 2,
+            "youtube": 3,
+            "downloads": 4,
+            "settings": 5,
         }
         if view_name in view_map:
             self.sidebar.setCurrentRow(view_map[view_name])
@@ -400,7 +406,7 @@ class MainWindow(QMainWindow):
         from PySide6.QtWidgets import QFileDialog
         files, _ = QFileDialog.getOpenFileNames(self, "Import Exportify CSV", "", "CSV Files (*.csv)")
         if files:
-            self.welcome_view._handle_dropped_files(files)
+            self.exportify_view._handle_dropped_files(files)
 
     def _open_exportify(self):
         import webbrowser

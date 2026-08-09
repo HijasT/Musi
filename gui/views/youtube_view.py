@@ -1,11 +1,11 @@
-"""YouTube download view."""
+"""YouTube download view — music or video, by URL or search query."""
 
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel,
     QPushButton, QLineEdit, QGroupBox,
     QMessageBox, QTextEdit, QScrollArea, QFrame,
     QSpacerItem, QSizePolicy, QListWidget, QListWidgetItem,
-    QProgressBar
+    QProgressBar, QButtonGroup
 )
 from PySide6.QtCore import Qt
 
@@ -14,7 +14,7 @@ from gui.workers.video_download_worker import VideoDownloadWorker
 
 
 class YouTubeView(QWidget):
-    """View for downloading from YouTube URLs or search."""
+    """View for downloading music or video from YouTube (and other sites)."""
 
     def __init__(self, config: dict, queue: DownloadQueue, parent=None):
         super().__init__(parent)
@@ -23,6 +23,7 @@ class YouTubeView(QWidget):
         self.video_worker = None
         self._setup_ui()
         self._refresh_favorites_list()
+        self._on_mode_changed()
 
     def _setup_ui(self):
         """Set up the YouTube UI."""
@@ -43,35 +44,61 @@ class YouTubeView(QWidget):
         title.setObjectName("title")
         layout.addWidget(title)
 
-        subtitle = QLabel("Download music from YouTube by URL or search query")
+        subtitle = QLabel("Download music or video by URL or search query")
         subtitle.setObjectName("subtitle")
         layout.addWidget(subtitle)
 
-        # Single URL/Search Group
-        single_group = QGroupBox("Download Single Track")
+        # Single URL/Search Group — music/video toggle + one input + one action
+        single_group = QGroupBox("Download")
         single_layout = QVBoxLayout(single_group)
         single_layout.setSpacing(12)
 
-        url_label = QLabel("URL or search query")
-        url_label.setObjectName("muted")
-        single_layout.addWidget(url_label)
+        mode_row = QHBoxLayout()
+        mode_row.setSpacing(0)
+
+        self.music_mode_btn = QPushButton("Music")
+        self.music_mode_btn.setCheckable(True)
+        self.music_mode_btn.setChecked(True)
+        self.video_mode_btn = QPushButton("Video")
+        self.video_mode_btn.setCheckable(True)
+        self.video_mode_btn.setObjectName("secondary")
+
+        self.mode_group = QButtonGroup(self)
+        self.mode_group.setExclusive(True)
+        self.mode_group.addButton(self.music_mode_btn)
+        self.mode_group.addButton(self.video_mode_btn)
+        self.mode_group.buttonToggled.connect(self._on_mode_changed)
+
+        mode_row.addWidget(self.music_mode_btn)
+        mode_row.addWidget(self.video_mode_btn)
+        mode_row.addStretch()
+        single_layout.addLayout(mode_row)
+
+        self.url_label = QLabel("URL or search query")
+        self.url_label.setObjectName("muted")
+        single_layout.addWidget(self.url_label)
 
         self.url_input = QLineEdit()
-        self.url_input.setPlaceholderText("Enter YouTube URL or search query (e.g., 'Artist - Song Name')")
-        self.url_input.returnPressed.connect(self._add_single_to_queue)
+        self.url_input.returnPressed.connect(self._on_submit)
         single_layout.addWidget(self.url_input)
 
         single_btn_layout = QHBoxLayout()
         single_btn_layout.addStretch()
-        add_btn = QPushButton("Add to Queue")
-        add_btn.clicked.connect(self._add_single_to_queue)
-        single_btn_layout.addWidget(add_btn)
+        self.submit_btn = QPushButton("Add to Queue")
+        self.submit_btn.clicked.connect(self._on_submit)
+        single_btn_layout.addWidget(self.submit_btn)
         single_layout.addLayout(single_btn_layout)
+
+        self.video_progress = QProgressBar()
+        self.video_progress.setMinimum(0)
+        self.video_progress.setMaximum(0)
+        self.video_progress.setVisible(False)
+        single_layout.addWidget(self.video_progress)
 
         layout.addWidget(single_group)
 
-        # Batch input group
-        batch_group = QGroupBox("Batch Download")
+        # Batch input group (music only — search queries, one per line)
+        batch_group = QGroupBox("Batch Download (Music)")
         batch_layout = QVBoxLayout(batch_group)
         batch_layout.setSpacing(12)
 
@@ -106,38 +133,6 @@ class YouTubeView(QWidget):
         batch_layout.addLayout(batch_btn_layout)
 
         layout.addWidget(batch_group)
-
-        # Video download group
-        video_group = QGroupBox("Download Video")
-        video_layout = QVBoxLayout(video_group)
-        video_layout.setSpacing(12)
-
-        video_help = QLabel(
-            "Downloads the actual video (not just audio) from YouTube, TikTok, "
-            "Instagram, Twitter/X, Reddit, Twitch, and hundreds of other yt-dlp-supported sites."
-        )
-        video_help.setObjectName("muted")
-        video_help.setWordWrap(True)
-        video_layout.addWidget(video_help)
-
-        self.video_url_input = QLineEdit()
-        self.video_url_input.setPlaceholderText("Paste a video URL")
-        video_layout.addWidget(self.video_url_input)
-
-        video_btn_layout = QHBoxLayout()
-        video_btn_layout.addStretch()
-        self.video_download_btn = QPushButton("Download Video")
-        self.video_download_btn.clicked.connect(self._download_video)
-        video_btn_layout.addWidget(self.video_download_btn)
-        video_layout.addLayout(video_btn_layout)
-
-        self.video_progress = QProgressBar()
-        self.video_progress.setMinimum(0)
-        self.video_progress.setMaximum(0)
-        self.video_progress.setVisible(False)
-        video_layout.addWidget(self.video_progress)
-
-        layout.addWidget(video_group)
 
         # Favorites group
         favorites_group = QGroupBox("Favorites")
@@ -175,11 +170,11 @@ class YouTubeView(QWidget):
         tips_layout.setSpacing(8)
 
         tips_text = QLabel(
-            "- For best results, use the format: Artist - Track Name\n"
-            "- YouTube URLs are also supported (paste the full URL)\n"
+            "- Toggle Music/Video above to choose what you're downloading\n"
+            "- For music, use the format: Artist - Track Name (or paste a URL)\n"
+            "- Video works with YouTube, TikTok, Instagram, Twitter/X, Reddit, Twitch, and hundreds more\n"
             "- The search will find the first matching result on YouTube\n"
-            "- Check the Downloads tab to monitor progress\n"
-            "- Need the actual video, not just audio? Use \"Download Video\" below\n"
+            "- Check the Downloads tab to monitor music download progress\n"
             "- Save frequently-used links or searches under Favorites for one-click re-download"
         )
         tips_text.setWordWrap(True)
@@ -192,6 +187,33 @@ class YouTubeView(QWidget):
 
         scroll.setWidget(scroll_widget)
         main_layout.addWidget(scroll)
+
+    def _is_video_mode(self) -> bool:
+        return self.video_mode_btn.isChecked()
+
+    def _on_mode_changed(self, *_args):
+        """Update labels/placeholders/button text for the selected mode."""
+        # Keep the "secondary" (unchecked) styling on whichever button isn't active.
+        self.music_mode_btn.setObjectName("" if not self._is_video_mode() else "secondary")
+        self.video_mode_btn.setObjectName("secondary" if not self._is_video_mode() else "")
+        for btn in (self.music_mode_btn, self.video_mode_btn):
+            btn.style().unpolish(btn)
+            btn.style().polish(btn)
+
+        if self._is_video_mode():
+            self.url_label.setText("Video URL")
+            self.url_input.setPlaceholderText("Paste a video URL (YouTube, TikTok, Instagram, Twitter/X, Reddit, Twitch, etc.)")
+            self.submit_btn.setText("Download Video")
+        else:
+            self.url_label.setText("URL or search query")
+            self.url_input.setPlaceholderText("Enter YouTube URL or search query (e.g., 'Artist - Song Name')")
+            self.submit_btn.setText("Add to Queue")
+
+    def _on_submit(self):
+        if self._is_video_mode():
+            self._download_video()
+        else:
+            self._add_single_to_queue()
 
     def _parse_query(self, query: str) -> tuple:
         """
@@ -218,7 +240,7 @@ class YouTubeView(QWidget):
         return "Unknown Artist", query
 
     def _add_single_to_queue(self):
-        """Add single URL/search to queue."""
+        """Add single URL/search to the music download queue."""
         query = self.url_input.text().strip()
         if not query:
             QMessageBox.warning(self, "Empty Input", "Please enter a URL or search query.")
@@ -285,7 +307,7 @@ class YouTubeView(QWidget):
 
     def _download_video(self):
         """Download a full video (not audio-only) via a background worker."""
-        url = self.video_url_input.text().strip()
+        url = self.url_input.text().strip()
         if not url:
             QMessageBox.warning(self, "Empty Input", "Please enter a video URL.")
             return
@@ -304,7 +326,7 @@ class YouTubeView(QWidget):
             return
 
         video_dir = self.config.get("video_output_dir", "videos")
-        self.video_download_btn.setEnabled(False)
+        self.submit_btn.setEnabled(False)
         self.video_progress.setVisible(True)
 
         self.video_worker = VideoDownloadWorker(url, video_dir, self.config)
@@ -313,11 +335,11 @@ class YouTubeView(QWidget):
 
     def _on_video_finished(self, success: bool, error: str):
         self.video_progress.setVisible(False)
-        self.video_download_btn.setEnabled(True)
+        self.submit_btn.setEnabled(True)
         self.video_worker = None
 
         if success:
-            self.video_url_input.clear()
+            self.url_input.clear()
             QMessageBox.information(self, "Download Complete", "Video downloaded successfully.")
         else:
             QMessageBox.warning(self, "Download Failed", error or "The video could not be downloaded.")
@@ -335,7 +357,7 @@ class YouTubeView(QWidget):
     def _save_url_as_favorite(self):
         from managers.favorites_manager import add_favorite
 
-        query = self.url_input.text().strip() or self.video_url_input.text().strip()
+        query = self.url_input.text().strip()
         if not query:
             QMessageBox.warning(self, "Nothing to Save", "Enter a URL or search query above first.")
             return
@@ -371,7 +393,7 @@ class YouTubeView(QWidget):
         if not fav:
             return
 
-        # Both link and search favorites go through the same audio queue path —
-        # _parse_query() already handles distinguishing a URL from a search string.
+        # _parse_query()/_on_submit() already handle distinguishing a URL from
+        # a search string, and route based on the current Music/Video toggle.
         self.url_input.setText(fav["value"])
-        self._add_single_to_queue()
+        self._on_submit()

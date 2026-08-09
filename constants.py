@@ -29,6 +29,14 @@ AUDIO_BITRATE_OPTIONS = {
     "320k": "Best quality (larger file size)"
 }
 
+# Video Related
+
+VIDEO_FORMAT_OPTIONS = {
+    "mp4": "Best compatibility (works everywhere)",
+    "mkv": "Keeps multiple audio/subtitle tracks",
+    "webm": "Smaller file size",
+}
+
 
 # Files
 

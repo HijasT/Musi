@@ -11,7 +11,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Signal
 
 from config import save_config, validate_config, DEFAULT_CONFIG, load_config
-from constants import AUDIO_BITRATE_OPTIONS, VALID_AUDIO_EXTENSIONS
+from constants import AUDIO_BITRATE_OPTIONS, VALID_AUDIO_EXTENSIONS, VIDEO_FORMAT_OPTIONS, APP_VERSION, GITHUB_REPO
 from gui.styles import COLORS
 from utils.ffmpeg import check_ffmpeg_available
 from tools.ytdlp_update_checker import check_ytdlp_updates
@@ -29,6 +29,7 @@ class SettingsView(QWidget):
         self.ytdlp_worker = None
         self.cleanup_worker = None
         self.convert_worker = None
+        self.app_update_worker = None
         self._setup_ui()
         self._load_values()
         self._check_ffmpeg_status()
@@ -73,6 +74,7 @@ class SettingsView(QWidget):
         self.ffmpeg_status_icon.setFixedWidth(20)
         status_row.addWidget(self.ffmpeg_status_icon)
         self.ffmpeg_status_label = QLabel("Checking...")
+        self.ffmpeg_status_label.setWordWrap(True)
         status_row.addWidget(self.ffmpeg_status_label, 1)
         self.ffmpeg_install_btn = QPushButton("Install FFmpeg")
         self.ffmpeg_install_btn.setObjectName("secondary")
@@ -129,6 +131,7 @@ class SettingsView(QWidget):
         self.ytdlp_status_icon.setFixedWidth(20)
         ytdlp_status_row.addWidget(self.ytdlp_status_icon)
         self.ytdlp_status_label = QLabel("Checking...")
+        self.ytdlp_status_label.setWordWrap(True)
         ytdlp_status_row.addWidget(self.ytdlp_status_label, 1)
         self.ytdlp_update_btn = QPushButton("Check for Updates")
         self.ytdlp_update_btn.setObjectName("secondary")
@@ -166,6 +169,32 @@ class SettingsView(QWidget):
 
         layout.addWidget(deps_group)
 
+        # About & Updates Group
+        about_group = QGroupBox("About && Updates")
+        about_layout = QVBoxLayout(about_group)
+        about_layout.setSpacing(10)
+
+        version_row = QHBoxLayout()
+        version_label = QLabel(f"Chaos Media Downloader v{APP_VERSION}")
+        version_row.addWidget(version_label, 1)
+        self.check_updates_btn = QPushButton("Check for Updates")
+        self.check_updates_btn.setObjectName("secondary")
+        self.check_updates_btn.clicked.connect(self._check_app_updates)
+        version_row.addWidget(self.check_updates_btn)
+        about_layout.addLayout(version_row)
+
+        self.update_status_label = QLabel("")
+        self.update_status_label.setObjectName("muted")
+        self.update_status_label.setWordWrap(True)
+        about_layout.addWidget(self.update_status_label)
+
+        github_btn = QPushButton("Open GitHub Repository")
+        github_btn.setObjectName("secondary")
+        github_btn.clicked.connect(self._open_github)
+        about_layout.addWidget(github_btn)
+
+        layout.addWidget(about_group)
+
         # Output Settings Group
         output_group = QGroupBox("Output Settings")
         output_layout = QVBoxLayout(output_group)
@@ -199,6 +228,38 @@ class SettingsView(QWidget):
         for bitrate, desc in AUDIO_BITRATE_OPTIONS.items():
             self.bitrate_combo.addItem(f"{bitrate} - {desc}", userData=bitrate)
         output_layout.addWidget(self.bitrate_combo)
+
+        # --- Separator ---
+        video_sep = QFrame()
+        video_sep.setFrameShape(QFrame.HLine)
+        video_sep.setStyleSheet(f"color: {COLORS['border']};")
+        video_sep.setFixedHeight(1)
+        output_layout.addWidget(video_sep)
+
+        video_dir_label = QLabel("Video output directory")
+        video_dir_label.setObjectName("muted")
+        output_layout.addWidget(video_dir_label)
+        video_dir_row = QHBoxLayout()
+        self.video_output_dir_input = QLineEdit()
+        self.video_output_dir_input.setPlaceholderText("Select video output directory...")
+        video_dir_row.addWidget(self.video_output_dir_input, 1)
+        video_browse_btn = QPushButton("Browse")
+        video_browse_btn.setObjectName("secondary")
+        video_browse_btn.setFixedWidth(70)
+        video_browse_btn.clicked.connect(self._browse_video_output_dir)
+        video_dir_row.addWidget(video_browse_btn)
+        output_layout.addLayout(video_dir_row)
+
+        video_format_label = QLabel("Video format")
+        video_format_label.setObjectName("muted")
+        output_layout.addWidget(video_format_label)
+        self.video_format_combo = QComboBox()
+        for fmt, desc in VIDEO_FORMAT_OPTIONS.items():
+            self.video_format_combo.addItem(f"{fmt} - {desc}", userData=fmt)
+        output_layout.addWidget(self.video_format_combo)
+
+        self.embed_video_subs_check = QCheckBox("Embed subtitles in downloaded videos")
+        output_layout.addWidget(self.embed_video_subs_check)
 
         layout.addWidget(output_group)
 
@@ -417,6 +478,10 @@ class SettingsView(QWidget):
         self.format_combo.setCurrentText(self.config.get("audio_format", "mp3"))
         bitrate_index = self.bitrate_combo.findData(self.config.get("audio_bitrate", "320k"))
         self.bitrate_combo.setCurrentIndex(bitrate_index if bitrate_index >= 0 else self.bitrate_combo.count() - 1)
+        self.video_output_dir_input.setText(self.config.get("video_output_dir", "videos"))
+        video_format_index = self.video_format_combo.findData(self.config.get("video_format", "mp4"))
+        self.video_format_combo.setCurrentIndex(video_format_index if video_format_index >= 0 else 0)
+        self.embed_video_subs_check.setChecked(self.config.get("embed_video_subs", True))
         self.client_id_input.setText(self.config.get("spotify_client_id", ""))
         self.redirect_uri_input.setText(self.config.get("spotify_redirect_uri", "http://127.0.0.1:8888/callback"))
         self.sleep_input.setText(str(self.config.get("sleep_between", 5)))
@@ -792,6 +857,65 @@ class SettingsView(QWidget):
             # Auto-save to make sure it takes effect
             self._update_config_value("output_dir", folder)
 
+    def _browse_video_output_dir(self):
+        """Open folder browser for video output directory."""
+        current_dir = self.video_output_dir_input.text() or os.path.expanduser("~")
+
+        if not os.path.isdir(current_dir):
+            current_dir = os.path.expanduser("~")
+
+        folder = QFileDialog.getExistingDirectory(
+            self,
+            "Select Video Output Directory",
+            current_dir,
+            QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks
+        )
+        if folder:
+            self.video_output_dir_input.setText(folder)
+            self._update_config_value("video_output_dir", folder)
+
+    def _check_app_updates(self):
+        """Manually check GitHub for a newer release (shows result either way,
+        unlike the silent startup check)."""
+        self.check_updates_btn.setEnabled(False)
+        self.update_status_label.setText("Checking...")
+
+        from gui.workers.app_update_worker import AppUpdateCheckWorker
+        self.app_update_worker = AppUpdateCheckWorker()
+        self.app_update_worker.finished.connect(self._on_app_update_check_finished)
+        self.app_update_worker.start()
+
+    def _on_app_update_check_finished(self, update_info: dict):
+        self.check_updates_btn.setEnabled(True)
+        self.app_update_worker = None
+
+        if not update_info:
+            self.update_status_label.setText("Could not check for updates (network unavailable?)")
+            return
+
+        if update_info.get("update_available"):
+            self.update_status_label.setText(
+                f"Update available: {update_info['latest_version']} (you have v{update_info['current_version']})"
+            )
+            reply = QMessageBox.question(
+                self,
+                "Update Available",
+                f"A new version is available: {update_info['latest_version']}\n\n"
+                "Open the download page?",
+                QMessageBox.Yes | QMessageBox.No,
+                QMessageBox.Yes,
+            )
+            if reply == QMessageBox.Yes:
+                import webbrowser
+                webbrowser.open(update_info["release_url"])
+        else:
+            self.update_status_label.setText(f"You're up to date (v{update_info.get('current_version', APP_VERSION)})")
+
+    def _open_github(self):
+        """Open the GitHub repository in the default browser."""
+        import webbrowser
+        webbrowser.open(f"https://github.com/{GITHUB_REPO}")
+
     def _update_config_value(self, key: str, value):
         """Update a single config value and save."""
         self.config[key] = value
@@ -820,6 +944,9 @@ class SettingsView(QWidget):
             self.config["output_dir"] = output_dir
             self.config["audio_format"] = self.format_combo.currentText()
             self.config["audio_bitrate"] = self.bitrate_combo.currentData()
+            self.config["video_output_dir"] = self.video_output_dir_input.text().strip() or "videos"
+            self.config["video_format"] = self.video_format_combo.currentData()
+            self.config["embed_video_subs"] = self.embed_video_subs_check.isChecked()
             self.config["spotify_client_id"] = self.client_id_input.text().strip()
             self.config["sleep_between"] = self._safe_int(self.sleep_input.text(), 5)
             self.config["retry_attempts"] = self._safe_int(self.retry_input.text(), 3)

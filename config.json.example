@@ -6,6 +6,7 @@
   "audio_format": "mp3",
   "audio_bitrate": "320k",
   "video_output_dir": "videos",
+  "video_format": "mp4",
   "embed_video_subs": true,
   "sleep_between": 5,
   "average_download_time": 20,

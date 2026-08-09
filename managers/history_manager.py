@@ -12,6 +12,7 @@ from typing import Optional
 
 from constants import HISTORY_FILE
 from utils.track_checker import track_key
+from utils.filename_match import normalize_match_key
 from utils.logger import log_error
 
 
@@ -42,18 +43,37 @@ def save_history(history: dict) -> None:
 
 def log_download(artist: str, track: str, file_path: Optional[str] = None,
                   playlist: Optional[str] = None, audio_format: Optional[str] = None) -> None:
-    """Record a successful download. Safe to call repeatedly for the same track."""
+    """Record a successful audio download. Safe to call repeatedly for the same track."""
     if not artist or not track:
         return
 
     key = track_key({"artist": artist, "track": track})
     history = load_history()
     history[key] = {
+        "kind": "audio",
         "artist": artist,
         "track": track,
         "file_path": file_path,
         "playlist": playlist,
         "audio_format": audio_format,
+        "downloaded_at": datetime.now(timezone.utc).isoformat(),
+    }
+    save_history(history)
+
+
+def log_video_download(title: str, url: str, file_path: Optional[str] = None) -> None:
+    """Record a successful video download. Keyed by URL, since videos don't
+    have a canonical artist/track identity the way audio downloads do."""
+    if not url:
+        return
+
+    key = "video:" + normalize_match_key(url)
+    history = load_history()
+    history[key] = {
+        "kind": "video",
+        "title": title or url,
+        "url": url,
+        "file_path": file_path,
         "downloaded_at": datetime.now(timezone.utc).isoformat(),
     }
     save_history(history)
@@ -67,3 +87,20 @@ def get_history_entry(artist: str, track: str) -> Optional[dict]:
 
 def has_been_downloaded(artist: str, track: str) -> bool:
     return get_history_entry(artist, track) is not None
+
+
+def get_stats() -> dict:
+    """Return {'audio_count': int, 'video_count': int} from the download history.
+
+    Entries without a 'kind' field are legacy audio downloads logged before
+    this field existed, and are counted as audio.
+    """
+    history = load_history()
+    audio_count = 0
+    video_count = 0
+    for entry in history.values():
+        if entry.get("kind") == "video":
+            video_count += 1
+        else:
+            audio_count += 1
+    return {"audio_count": audio_count, "video_count": video_count}

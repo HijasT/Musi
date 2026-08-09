@@ -1,4 +1,5 @@
 import os
+import glob
 import subprocess
 import json
 import questionary
@@ -60,11 +61,13 @@ def download_video(url, output_dir, config=None, confirm=True):
 
     os.makedirs(output_dir, exist_ok=True)
 
+    video_format = (config or {}).get("video_format", "mp4")
+
     cmd = [
         "yt-dlp",
         url,
         "-f", "bv*+ba/b",
-        "--merge-output-format", "mp4",
+        "--merge-output-format", video_format,
         "-o", os.path.join(output_dir, "%(title)s.%(ext)s"),
         "--embed-metadata",
         "--embed-thumbnail",
@@ -77,7 +80,23 @@ def download_video(url, output_dir, config=None, confirm=True):
         result = subprocess.run(cmd)
         if result.returncode == 0:
             log_success(f"Downloaded video: {title}")
-            return True, None, None
+
+            # Best-effort: find the file we just created, for history logging.
+            file_path = None
+            try:
+                matches = glob.glob(os.path.join(output_dir, f"*.{video_format}"))
+                if matches:
+                    file_path = max(matches, key=os.path.getmtime)
+            except OSError:
+                pass
+
+            try:
+                from managers.history_manager import log_video_download
+                log_video_download(title, url, file_path=file_path)
+            except Exception:
+                pass
+
+            return True, file_path, None
         else:
             log_error(f"Failed to download video: {title}")
             return False, None, "yt-dlp exited with an error"

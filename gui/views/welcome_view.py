@@ -1,11 +1,9 @@
-"""Welcome view with quick start guide and Exportify import."""
+"""Home view: quick stats and navigation to the rest of the app."""
 
-import os
-import csv
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel,
     QPushButton, QFrame, QSizePolicy,
-    QMessageBox, QScrollArea, QGridLayout
+    QScrollArea, QGridLayout
 )
 from PySide6.QtCore import Qt, Signal
 
@@ -13,139 +11,37 @@ from gui.workers.download_queue import DownloadQueue
 from gui.styles import COLORS
 
 
-class DropZone(QFrame):
-    """Drop zone widget for Exportify CSV files."""
+class StatCard(QFrame):
+    """A small stat display card (e.g. '128 Music Downloaded')."""
 
-    files_dropped = Signal(list)
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setObjectName("dropZone")
-        self.setAcceptDrops(True)
-        self.setMinimumHeight(180)
-        self._setup_ui()
-
-    def _setup_ui(self):
-        layout = QVBoxLayout(self)
-        layout.setAlignment(Qt.AlignCenter)
-        layout.setSpacing(12)
-        layout.setContentsMargins(40, 30, 40, 30)
-
-        # Upload icon using text
-        icon = QLabel("+")
-        icon.setStyleSheet(f"""
-            font-size: 48px;
-            font-weight: 300;
-            color: {COLORS["text_muted"]};
-            background: transparent;
-        """)
-        icon.setAlignment(Qt.AlignCenter)
-        layout.addWidget(icon)
-
-        title = QLabel("Drop your Exportify CSV file here")
-        title.setObjectName("section")
-        title.setStyleSheet("font-size: 16px;")
-        title.setAlignment(Qt.AlignCenter)
-        layout.addWidget(title)
-
-        hint = QLabel("or click anywhere in this box to browse")
-        hint.setObjectName("muted")
-        hint.setStyleSheet("font-size: 13px;")
-        hint.setAlignment(Qt.AlignCenter)
-        layout.addWidget(hint)
-
-    def dragEnterEvent(self, event):
-        if event.mimeData().hasUrls():
-            for url in event.mimeData().urls():
-                if url.toLocalFile().lower().endswith('.csv'):
-                    event.acceptProposedAction()
-                    self.setObjectName("dropZoneActive")
-                    self.style().unpolish(self)
-                    self.style().polish(self)
-                    return
-        event.ignore()
-
-    def dragLeaveEvent(self, event):
-        self.setObjectName("dropZone")
-        self.style().unpolish(self)
-        self.style().polish(self)
-
-    def dropEvent(self, event):
-        self.setObjectName("dropZone")
-        self.style().unpolish(self)
-        self.style().polish(self)
-
-        files = []
-        for url in event.mimeData().urls():
-            file_path = url.toLocalFile()
-            if file_path.lower().endswith('.csv'):
-                files.append(file_path)
-
-        if files:
-            self.files_dropped.emit(files)
-            event.acceptProposedAction()
-        else:
-            event.ignore()
-
-    def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton:
-            from PySide6.QtWidgets import QFileDialog
-            files, _ = QFileDialog.getOpenFileNames(
-                self,
-                "Select Exportify CSV Files",
-                "",
-                "CSV Files (*.csv)"
-            )
-            if files:
-                self.files_dropped.emit(files)
-
-
-class StepCard(QFrame):
-    """A numbered step card for instructions."""
-
-    def __init__(self, number: int, title: str, description: str, parent=None):
+    def __init__(self, value: str, label: str, color: str = None, parent=None):
         super().__init__(parent)
         self.setObjectName("card")
-        self.setStyleSheet(f"StepCard {{ background-color: {COLORS['background_light']}; }}")
-        self._setup_ui(number, title, description)
+        self._color = color
+        self._setup_ui(value, label)
 
-    def _setup_ui(self, number: int, title: str, description: str):
-        layout = QHBoxLayout(self)
-        layout.setContentsMargins(20, 20, 20, 20)
-        layout.setSpacing(16)
+    def _setup_ui(self, value: str, label: str):
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(24, 18, 24, 18)
+        layout.setSpacing(4)
 
-        # Number badge
-        number_label = QLabel(str(number))
-        number_label.setFixedSize(40, 40)
-        number_label.setAlignment(Qt.AlignCenter)
-        number_label.setStyleSheet(f"""
-            background-color: {COLORS["accent"]};
-            color: {COLORS["background_dark"]};
-            font-size: 18px;
-            font-weight: 700;
-            border-radius: 20px;
-        """)
-        layout.addWidget(number_label)
+        self.value_label = QLabel(value)
+        self.value_label.setObjectName("statValue")
+        if self._color:
+            self.value_label.setStyleSheet(f"color: {self._color}; background: transparent; font-size: 28px;")
+        layout.addWidget(self.value_label)
 
-        # Text content
-        text_layout = QVBoxLayout()
-        text_layout.setSpacing(4)
+        caption = QLabel(label)
+        caption.setObjectName("statLabel")
+        layout.addWidget(caption)
 
-        title_label = QLabel(title)
-        title_label.setStyleSheet("font-size: 15px; font-weight: 600;")
-        text_layout.addWidget(title_label)
-
-        desc_label = QLabel(description)
-        desc_label.setObjectName("muted")
-        desc_label.setStyleSheet("font-size: 13px;")
-        desc_label.setWordWrap(True)
-        text_layout.addWidget(desc_label)
-
-        layout.addLayout(text_layout, 1)
+    def set_value(self, value: str):
+        self.value_label.setText(value)
 
 
 class FeatureCard(QFrame):
-    """A feature card with icon, title, description and action button."""
+    """A feature card with title, description and action button — navigates
+    to another tab when clicked."""
 
     clicked = Signal()
 
@@ -190,7 +86,7 @@ class FeatureCard(QFrame):
 
 
 class WelcomeView(QWidget):
-    """Welcome screen with quick start instructions and Exportify import."""
+    """Home screen: download stats and quick navigation to the rest of the app."""
 
     navigate_to = Signal(str)
 
@@ -199,6 +95,7 @@ class WelcomeView(QWidget):
         self.config = config
         self.download_queue = download_queue
         self._setup_ui()
+        self._refresh_stats()
 
     def _setup_ui(self):
         scroll = QScrollArea()
@@ -227,190 +124,71 @@ class WelcomeView(QWidget):
         layout.addLayout(header)
 
         # ============================================================
-        # EASIEST WAY SECTION - Exportify
+        # STATS
         # ============================================================
-        easiest_section = QFrame()
-        easiest_section.setObjectName("cardAccent")
-        easiest_layout = QVBoxLayout(easiest_section)
-        easiest_layout.setContentsMargins(28, 24, 28, 28)
-        easiest_layout.setSpacing(20)
+        stats_layout = QHBoxLayout()
+        stats_layout.setSpacing(16)
 
-        # Section header
-        easiest_header = QHBoxLayout()
+        self.music_stat = StatCard("0", "MUSIC DOWNLOADED", COLORS["accent"])
+        stats_layout.addWidget(self.music_stat)
 
-        easiest_title = QLabel("Easiest Way to Download Your Spotify Music")
-        easiest_title.setStyleSheet(f"font-size: 20px; font-weight: 700; color: {COLORS['accent']};")
-        easiest_header.addWidget(easiest_title)
+        self.video_stat = StatCard("0", "VIDEOS DOWNLOADED", COLORS["success"])
+        stats_layout.addWidget(self.video_stat)
 
-        easiest_header.addStretch()
+        stats_layout.addStretch()
 
-        easiest_badge = QLabel("RECOMMENDED")
-        easiest_badge.setStyleSheet(f"""
-            background-color: {COLORS["accent"]};
-            color: {COLORS["background_dark"]};
-            font-size: 11px;
-            font-weight: 700;
-            padding: 4px 12px;
-            border-radius: 4px;
-        """)
-        easiest_header.addWidget(easiest_badge)
+        layout.addLayout(stats_layout)
 
-        self.toggle_help_btn = QPushButton("Hide Guide")
-        self.toggle_help_btn.setObjectName("ghost")
-        self.toggle_help_btn.clicked.connect(self._toggle_help)
-        easiest_header.addWidget(self.toggle_help_btn)
+        # ============================================================
+        # QUICK NAVIGATION
+        # ============================================================
+        nav_header = QLabel("Get Started")
+        nav_header.setObjectName("section")
+        nav_header.setStyleSheet("font-size: 18px;")
+        layout.addWidget(nav_header)
 
-        easiest_layout.addLayout(easiest_header)
-
-        # Collapsible help content
-        self.help_container = QWidget()
-        self.help_container.setStyleSheet("background: transparent;")
-        help_layout = QVBoxLayout(self.help_container)
-        help_layout.setContentsMargins(0, 0, 0, 0)
-        help_layout.setSpacing(12)
-
-        # Explanation
-        explanation = QLabel(
-            "Exportify is a free website that exports your Spotify playlists to CSV files. "
-            "This is the simplest way to download your music - no Spotify API setup required!"
-        )
-        explanation.setStyleSheet("font-size: 14px; line-height: 1.5;")
-        explanation.setWordWrap(True)
-        help_layout.addWidget(explanation)
-
-        # Steps
-        steps_layout = QVBoxLayout()
-        steps_layout.setSpacing(12)
-
-        step1 = StepCard(
-            1,
-            "Go to exportify.net",
-            "Open your web browser and visit exportify.net - it's free and safe to use"
-        )
-        steps_layout.addWidget(step1)
-
-        step2 = StepCard(
-            2,
-            "Log in with your Spotify account",
-            "Click the green button to connect your Spotify. Exportify will show all your playlists."
-        )
-        steps_layout.addWidget(step2)
-
-        step3 = StepCard(
-            3,
-            "Export the playlist you want",
-            "Click 'Export' next to any playlist. A CSV file will download to your computer."
-        )
-        steps_layout.addWidget(step3)
-
-        step4 = StepCard(
-            4,
-            "Drag the CSV file below",
-            "Drag and drop the downloaded CSV file into the box below, or click to browse."
-        )
-        steps_layout.addWidget(step4)
-
-        help_layout.addLayout(steps_layout)
-        easiest_layout.addWidget(self.help_container)
-
-        # Link to exportify
-        link_layout = QHBoxLayout()
-        link_layout.setSpacing(12)
-
-        exportify_btn = QPushButton("\u2197  Open exportify.net")
-        exportify_btn.setStyleSheet(f"""
-            QPushButton {{
-                background-color: rgba(255, 255, 255, 0.12);
-                color: {COLORS["text"]};
-                border: 1px solid rgba(255, 255, 255, 0.2);
-                padding: 10px 20px;
-                border-radius: 6px;
-                font-weight: 600;
-                font-size: 13px;
-            }}
-            QPushButton:hover {{
-                background-color: rgba(255, 255, 255, 0.2);
-                border-color: rgba(255, 255, 255, 0.35);
-            }}
-            QPushButton:pressed {{ background-color: rgba(255, 255, 255, 0.08); }}
-        """)
-        exportify_btn.setCursor(Qt.PointingHandCursor)
-        exportify_btn.clicked.connect(self._open_exportify)
-        link_layout.addWidget(exportify_btn)
-
-        link_layout.addStretch()
-
-        easiest_layout.addLayout(link_layout)
-
-        # Drop zone
-        self.drop_zone = DropZone()
-        self.drop_zone.files_dropped.connect(self._handle_dropped_files)
-        easiest_layout.addWidget(self.drop_zone)
-
-        layout.addWidget(easiest_section)
-
-        # Divider with "OR"
-        divider_layout = QHBoxLayout()
-        divider_layout.setSpacing(16)
-
-        left_line = QFrame()
-        left_line.setObjectName("divider")
-        left_line.setFrameShape(QFrame.HLine)
-        left_line.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        divider_layout.addWidget(left_line)
-
-        or_label = QLabel("OR USE OTHER METHODS")
-        or_label.setObjectName("sectionSmall")
-        or_label.setStyleSheet(f"font-size: 12px; color: {COLORS['text_muted']};")
-        divider_layout.addWidget(or_label)
-
-        right_line = QFrame()
-        right_line.setObjectName("divider")
-        right_line.setFrameShape(QFrame.HLine)
-        right_line.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        divider_layout.addWidget(right_line)
-
-        layout.addLayout(divider_layout)
-
-        # Feature cards in 2x2 grid layout
         cards_grid = QGridLayout()
         cards_grid.setSpacing(16)
 
-        # Spotify Card
+        exportify_card = FeatureCard(
+            "Exportify",
+            "The easiest way to download your Spotify music: export a playlist to CSV, no API setup required.",
+            "Open Exportify"
+        )
+        exportify_card.clicked.connect(lambda: self.navigate_to.emit("exportify"))
+        cards_grid.addWidget(exportify_card, 0, 0)
+
         spotify_card = FeatureCard(
             "Spotify Direct",
             "Connect to Spotify with API credentials to browse and download playlists directly from the app. Requires setup.",
             "Open Spotify"
         )
         spotify_card.clicked.connect(lambda: self.navigate_to.emit("spotify"))
-        cards_grid.addWidget(spotify_card, 0, 0)
+        cards_grid.addWidget(spotify_card, 0, 1)
 
-        # YouTube Card
         youtube_card = FeatureCard(
             "YouTube",
-            "Download audio from YouTube by pasting a video or playlist URL, or search for songs directly.",
+            "Download music or video from YouTube (and hundreds of other sites) by pasting a link or searching.",
             "Open YouTube"
         )
         youtube_card.clicked.connect(lambda: self.navigate_to.emit("youtube"))
-        cards_grid.addWidget(youtube_card, 0, 1)
+        cards_grid.addWidget(youtube_card, 1, 0)
 
-        # Downloads Card
         downloads_card = FeatureCard(
             "Downloads",
             "View and manage your download queue. Track progress and see completed downloads.",
             "View Queue"
         )
         downloads_card.clicked.connect(lambda: self.navigate_to.emit("downloads"))
-        cards_grid.addWidget(downloads_card, 1, 0)
+        cards_grid.addWidget(downloads_card, 1, 1)
 
-        # Settings Card
         settings_card = FeatureCard(
             "Settings",
-            "Configure output folder, audio format (MP3, FLAC, etc.), quality settings, and more.",
+            "Configure output folders, audio/video format, quality settings, and more.",
             "Open Settings"
         )
         settings_card.clicked.connect(lambda: self.navigate_to.emit("settings"))
-        cards_grid.addWidget(settings_card, 1, 1)
+        cards_grid.addWidget(settings_card, 2, 0)
 
         layout.addLayout(cards_grid)
 
@@ -446,7 +224,7 @@ class WelcomeView(QWidget):
 
             warning_desc = QLabel(
                 "To use Spotify Direct mode, set up your Spotify Client ID in Settings. "
-                "Or use Exportify above - it works without any setup!"
+                "Or use Exportify — it works without any setup!"
             )
             warning_desc.setObjectName("muted")
             warning_desc.setStyleSheet("font-size: 13px;")
@@ -468,103 +246,16 @@ class WelcomeView(QWidget):
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.addWidget(scroll)
 
-    def _toggle_help(self):
-        visible = self.help_container.isVisible()
-        self.help_container.setVisible(not visible)
-        self.toggle_help_btn.setText("Show Guide" if visible else "Hide Guide")
+    def _refresh_stats(self):
+        try:
+            from managers.history_manager import get_stats
+            stats = get_stats()
+            self.music_stat.set_value(str(stats.get("audio_count", 0)))
+            self.video_stat.set_value(str(stats.get("video_count", 0)))
+        except Exception:
+            pass
 
-    def _open_exportify(self):
-        """Open Exportify website in browser."""
-        import webbrowser
-        webbrowser.open("https://exportify.net")
-
-    def _handle_dropped_files(self, files: list):
-        if not self.download_queue:
-            QMessageBox.warning(self, "Error", "Download queue not available")
-            return
-
-        total_tracks = []
-
-        for file_path in files:
-            try:
-                tracks = self._parse_exportify_csv(file_path)
-                if tracks:
-                    total_tracks.extend(tracks)
-            except Exception as e:
-                QMessageBox.warning(
-                    self,
-                    "Import Error",
-                    f"Failed to parse {os.path.basename(file_path)}:\n{str(e)}"
-                )
-
-        if not total_tracks:
-            QMessageBox.information(
-                self,
-                "No Tracks Found",
-                "No valid tracks were found in the dropped files.\n\n"
-                "Make sure you're using a CSV file exported from Exportify."
-            )
-            return
-
-        reply = QMessageBox.question(
-            self,
-            "Import Tracks",
-            f"Found {len(total_tracks)} tracks.\n\nAdd them to the download queue?",
-            QMessageBox.Yes | QMessageBox.No,
-            QMessageBox.Yes
-        )
-
-        if reply == QMessageBox.Yes:
-            added = self._add_tracks_to_queue(total_tracks)
-            QMessageBox.information(
-                self,
-                "Import Complete",
-                f"Added {added} of {len(total_tracks)} tracks to the queue "
-                f"({len(total_tracks) - added} already downloaded or skipped).\n\n"
-                "Go to Downloads to start downloading."
-            )
-            self.navigate_to.emit("downloads")
-
-    def _parse_exportify_csv(self, file_path: str) -> list:
-        tracks = []
-
-        with open(file_path, 'r', encoding='utf-8') as f:
-            reader = csv.DictReader(f)
-
-            for row in reader:
-                track_name = row.get('Track Name') or row.get('track_name') or row.get('name')
-                artist_name = row.get('Artist Name(s)') or row.get('artist_name') or row.get('artist')
-                album_name = row.get('Album Name') or row.get('album_name') or row.get('album')
-                playlist_name = row.get('Playlist Name') or row.get('playlist_name') or os.path.basename(file_path)
-
-                if track_name and artist_name:
-                    if ',' in artist_name:
-                        artist_name = artist_name.split(',')[0].strip()
-                    elif ';' in artist_name:
-                        artist_name = artist_name.split(';')[0].strip()
-
-                    tracks.append({
-                        'track': track_name.strip(),
-                        'artist': artist_name.strip(),
-                        'album': album_name.strip() if album_name else '',
-                        'playlist': playlist_name.replace('.csv', '').strip() if playlist_name else 'Import'
-                    })
-
-        return tracks
-
-    def _add_tracks_to_queue(self, tracks: list) -> int:
-        if not self.download_queue:
-            return 0
-
-        from gui.workers.dedupe import filter_new_tracks
-        tracks = filter_new_tracks(self, self.config, tracks)
-
-        for track_data in tracks:
-            self.download_queue.add_item(
-                artist=track_data['artist'],
-                track=track_data['track'],
-                album=track_data.get('album', ''),
-                playlist=track_data.get('playlist', '')
-            )
-
-        return len(tracks)
+    def showEvent(self, event):
+        """Refresh stats every time Home becomes visible, so counts stay current."""
+        super().showEvent(event)
+        self._refresh_stats()

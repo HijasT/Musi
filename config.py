@@ -3,7 +3,7 @@ import os
 import sys
 from typing import Any, Dict, Optional
 
-from constants import AUDIO_BITRATE_OPTIONS
+from constants import AUDIO_BITRATE_OPTIONS, VIDEO_FORMAT_OPTIONS
 
 
 def get_app_dir() -> str:
@@ -28,6 +28,7 @@ DEFAULT_CONFIG = {
     "audio_format": "mp3",
     "audio_bitrate": "320k",
     "video_output_dir": "videos",
+    "video_format": "mp4",
     "embed_video_subs": True,
     "sleep_between": 5,
     "average_download_time": 20,
@@ -141,6 +142,11 @@ CONFIG_SCHEMA = {
         "choices": list(AUDIO_BITRATE_OPTIONS.keys()),
     },
     "video_output_dir": {"type": str, "required": False},
+    "video_format": {
+        "type": str,
+        "required": False,
+        "choices": list(VIDEO_FORMAT_OPTIONS.keys()),
+    },
     "embed_video_subs": {"type": bool, "required": False},
     "sleep_between": {"type": (int, float), "required": True, "min": 0, "max": 60},
     "average_download_time": {"type": (int, float), "required": False, "min": 1, "max": 300},
