@@ -520,6 +520,8 @@ def downloads_menu(config):
                 "Download from Exportify CSV folder",
                 "Download from playlists file (legacy Spotify export)",
                 "Download from YouTube link/playlist",
+                "Download video from a link (any yt-dlp site)",
+                "⭐ Favorites — quick re-download",
                 "Back",
             ],
         ).ask()
@@ -608,6 +610,11 @@ def downloads_menu(config):
                 config["sleep_between"],
                 config=config,
             )
+
+            if questionary.confirm("Save this as a favorite for quick re-download?", default=False).ask():
+                from managers.favorites_manager import add_favorite
+                add_favorite(f"{artist} - {song}", f"{artist} - {song}", "search")
+                log_info("Saved to favorites.")
 
         elif choice == "Spotify Web API (OAuth) — Playlists / Liked Songs":
             _spotify_api_menu(config)
@@ -802,6 +809,27 @@ def downloads_menu(config):
                 download_from_playlist(url, config["output_dir"], config["audio_format"], config["sleep_between"], config=config)
             else:
                 download_from_link(url, config["output_dir"], config["audio_format"], config=config)
+
+            if questionary.confirm("Save this link as a favorite for quick re-download?", default=False).ask():
+                from managers.favorites_manager import add_favorite
+                name = questionary.text("Name this favorite:", default=url[:50]).ask() or url[:50]
+                add_favorite(name, url, "link")
+                log_info("Saved to favorites.")
+
+        elif choice == "Download video from a link (any yt-dlp site)":
+            from downloader.video_downloader import download_video
+
+            url = questionary.text("Paste a video URL (YouTube, TikTok, Instagram, Twitter/X, Reddit, Twitch, etc.):").ask()
+            if not url:
+                log_warning("No URL provided.")
+                continue
+
+            video_dir = config.get("video_output_dir", "videos")
+            download_video(url, video_dir, config=config)
+
+        elif choice == "⭐ Favorites — quick re-download":
+            from menus.favorites_menu import favorites_menu
+            favorites_menu(config)
 
         elif choice == "Back":
             log_info("Returning to main menu...")

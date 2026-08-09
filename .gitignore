@@ -23,6 +23,7 @@ ffmpeg.zip
 
 # Application data
 music/
+videos/
 app.log
 *.tmp
 config.json
