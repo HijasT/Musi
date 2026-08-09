@@ -12,22 +12,35 @@ from gui.workers.download_queue import DownloadQueue, DownloadStatus
 from gui.workers.download_worker import DownloadWorker
 from gui.styles import COLORS
 
-# status -> (chip QSS object name, display label)
+# status -> (display label, background color key, text color key)
+# Qt Style Sheets don't support text-transform/letter-spacing, so labels are
+# written upper-case directly rather than relying on CSS to transform them.
 STATUS_CHIP = {
-    DownloadStatus.PENDING: ("chipQueued", "Queued"),
-    DownloadStatus.DOWNLOADING: ("chipDownloading", "Downloading"),
-    DownloadStatus.COMPLETED: ("chipDone", "Done"),
-    DownloadStatus.FAILED: ("chipFailed", "Failed"),
-    DownloadStatus.CANCELLED: ("chipQueued", "Cancelled"),
+    DownloadStatus.PENDING: ("QUEUED", "background_light", "text_secondary"),
+    DownloadStatus.DOWNLOADING: ("DOWNLOADING", "accent_muted", "accent"),
+    DownloadStatus.COMPLETED: ("DONE", "success_muted", "success"),
+    DownloadStatus.FAILED: ("FAILED", "error_muted", "error"),
+    DownloadStatus.CANCELLED: ("CANCELLED", "background_light", "text_secondary"),
 }
+
+
+def _chip_style(bg_key: str, fg_key: str) -> str:
+    # Set inline on the label rather than via global QSS + objectName: a chip
+    # label is reparented into a QTableWidget cell after the app-wide
+    # stylesheet has already been applied, and objectName-selector QSS isn't
+    # reliably re-applied to it afterwards (even after unpolish()/polish()).
+    return (
+        f"background-color: {COLORS[bg_key]}; color: {COLORS[fg_key]}; "
+        "font-size: 10.5px; font-weight: 700; border-radius: 4px; padding: 3px 8px;"
+    )
 
 
 def make_status_chip(status: DownloadStatus) -> QWidget:
     """Build a left-aligned chip badge widget for a queue item's status."""
-    object_name, label = STATUS_CHIP[status]
+    label_text, bg_key, fg_key = STATUS_CHIP[status]
 
-    chip = QLabel(label)
-    chip.setObjectName(object_name)
+    chip = QLabel(label_text)
+    chip.setStyleSheet(_chip_style(bg_key, fg_key))
 
     container = QWidget()
     container.setStyleSheet("background: transparent;")
@@ -175,8 +188,13 @@ class DownloadsView(QWidget):
         header_view.setSectionResizeMode(0, QHeaderView.Stretch)
         header_view.setSectionResizeMode(1, QHeaderView.Stretch)
         header_view.setSectionResizeMode(2, QHeaderView.ResizeToContents)
-        header_view.setSectionResizeMode(3, QHeaderView.ResizeToContents)
+        # STATUS holds only a cell widget (no backing QTableWidgetItem), so
+        # ResizeToContents has nothing to measure and leaves the widget
+        # mispositioned at (0, 0) until something else forces a relayout.
+        # Fixed width (like PROGRESS below) positions it correctly from the start.
+        header_view.setSectionResizeMode(3, QHeaderView.Fixed)
         header_view.setSectionResizeMode(4, QHeaderView.Fixed)
+        self.table.setColumnWidth(3, 150)
         self.table.setColumnWidth(4, 140)
 
         self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
@@ -239,12 +257,29 @@ class DownloadsView(QWidget):
         progress.setFixedHeight(6)
         self.table.setCellWidget(row, 4, progress)
 
+        # Cell widgets get sized against the row's height as it stood at
+        # insertion time; forcing a resize now (once, like the row's other
+        # cells already get implicitly) keeps the status chip from being
+        # left squashed to an earlier, smaller estimate.
+        self.table.resizeRowToContents(row)
+
         self._update_stats(self.queue.pending_count)
 
     def _on_item_updated(self, item):
         for row in range(self.table.rowCount()):
             if self.table.item(row, 0).data(Qt.UserRole) == item.id:
-                self.table.setCellWidget(row, 3, make_status_chip(item.status))
+                # Mutate the existing chip label in place rather than calling
+                # setCellWidget() again — replacing a cell widget a second
+                # time can leave the old one orphaned and still floating in
+                # the viewport instead of being cleanly removed.
+                chip_container = self.table.cellWidget(row, 3)
+                chip_label = chip_container.findChild(QLabel) if chip_container else None
+                if chip_label:
+                    label_text, bg_key, fg_key = STATUS_CHIP[item.status]
+                    chip_label.setText(label_text)
+                    chip_label.setStyleSheet(_chip_style(bg_key, fg_key))
+                else:
+                    self.table.setCellWidget(row, 3, make_status_chip(item.status))
 
                 progress = self.table.cellWidget(row, 4)
                 if progress:

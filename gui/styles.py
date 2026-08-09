@@ -624,51 +624,6 @@ QLabel#statLabel {{
     letter-spacing: 0.5px;
 }}
 
-/* ===================== STATUS CHIPS ===================== */
-QLabel#chipQueued {{
-    background-color: {COLORS["background_light"]};
-    color: {COLORS["text_secondary"]};
-    font-size: 10.5px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.4px;
-    border-radius: 4px;
-    padding: 3px 8px;
-}}
-
-QLabel#chipDownloading {{
-    background-color: {COLORS["accent_muted"]};
-    color: {COLORS["accent"]};
-    font-size: 10.5px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.4px;
-    border-radius: 4px;
-    padding: 3px 8px;
-}}
-
-QLabel#chipDone {{
-    background-color: {COLORS["success_muted"]};
-    color: {COLORS["success"]};
-    font-size: 10.5px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.4px;
-    border-radius: 4px;
-    padding: 3px 8px;
-}}
-
-QLabel#chipFailed {{
-    background-color: {COLORS["error_muted"]};
-    color: {COLORS["error"]};
-    font-size: 10.5px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.4px;
-    border-radius: 4px;
-    padding: 3px 8px;
-}}
-
 /* ===================== SCROLL AREA ===================== */
 QScrollArea {{
     border: none;
