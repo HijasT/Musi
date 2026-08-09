@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- **In-app update checker**: on every launch, Musi checks GitHub Releases in the background (no startup delay) and prompts to open the download page if a newer version is available. `constants.APP_VERSION` is now the single source of truth for the running version (title bar badge, About dialog, and the checker all read from it) — bump it alongside each tagged release.
+- **Favorites**: save a link or search under a name for one-click re-download later, without re-typing or re-navigating (`managers/favorites_manager.py`, `data/favorites.json`). Available from the CLI Downloads menu and a new Favorites section in the GUI's YouTube view; downloads offer to save themselves as a favorite afterward.
+- **Video downloads**: a new standalone mode downloads the actual video (merged best video + audio, mp4, with subtitles/thumbnail/metadata embedded) from YouTube, TikTok, Instagram, Twitter/X, Reddit, Twitch, and hundreds of other yt-dlp-supported sites — `downloader/video_downloader.py`, a new `video_output_dir` setting (default `videos`), the CLI's "Download video from a link" option, and a "Download Video" section in the GUI's YouTube view. Kept separate from the audio DownloadQueue since video isn't an audio-format/metadata-embedding operation.
+
+## [1.3.0] - 2026-08-09
+
+### Added
 - **New app logo**: a twin-reel mark on the "Tape Deck" charcoal-and-green palette, replacing the old glossy blue music-note icon (`gui/resources/icons/app/`).
 - **320kbps downloads**: new `audio_bitrate` config setting (default `320k`) applied via yt-dlp's `--audio-quality` across every download path. Editable from Settings or the CLI's "Choose audio bitrate" tool.
 - **ffmpeg-based library converter**: `tools/convert_audio.py` bulk-converts already-downloaded files to a chosen format/bitrate, from the CLI Tools menu or Settings → Library Maintenance → "Convert Library".

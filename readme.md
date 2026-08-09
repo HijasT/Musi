@@ -20,6 +20,9 @@ Musi is a fork of [Harmoni](https://github.com/Ssenseii/harmoni) by [Ssenseii](h
 - **Download history & duplicate protection** — every download is logged to `data/download_history.json` by canonical artist/track, independent of the file. If a track was downloaded before but is no longer in your library, Musi asks before re-downloading it instead of silently redoing the work.
 - **Auto-redownload corrupted files** — library cleanup no longer just deletes broken/empty audio files; it automatically re-queues a redownload for each one (toggle via `auto_redownload_corrupted`).
 - **Auto-fetched lyrics** — plain lyrics are pulled from [lrclib.net](https://lrclib.net) (no API key needed) and embedded alongside the rest of the track's metadata, toggle via `enable_lyrics_fetch`.
+- **In-app update checker** — Musi checks GitHub Releases in the background on launch and prompts to open the download page if a newer version is out.
+- **Favorites** — save a link or search under a name for one-click re-download later, without re-typing or re-navigating.
+- **Video downloads** — download the actual video (not just audio) from YouTube, TikTok, Instagram, Twitter/X, Reddit, Twitch, and hundreds of other yt-dlp-supported sites, kept separate from the music library.
 
 See [changelog.md](changelog.md) for the full history inherited from Harmoni.
 
@@ -46,6 +49,8 @@ See [changelog.md](changelog.md) for the full history inherited from Harmoni.
 - **Exportify Support** - Import playlists from CSV exports (easiest method!)
 - **Metadata Embedding** - Automatic ID3 tagging, including auto-fetched lyrics
 - **Library Management** - Duplicate detection (even for deleted files), corrupted-file cleanup with auto-redownload, format conversion, and organization
+- **Video Downloads** - Full video (not just audio) from YouTube and hundreds of other sites
+- **Favorites** - Save links/searches for one-click re-download
 
 ## Installation Options
 
