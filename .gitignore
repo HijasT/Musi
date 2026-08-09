@@ -33,6 +33,7 @@ export/
 
 # IDE
 .claude/
+CLAUDE.md
 .vscode/
 .idea/
 
