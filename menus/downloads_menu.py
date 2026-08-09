@@ -11,9 +11,11 @@ import questionary
 from utils.logger import log_info, log_warning, log_error
 from utils.track_checker import (
     check_downloaded_files,
+    check_downloaded_files_with_history,
     existing_track_keys_in_dir,
     track_key,
 )
+from managers.history_manager import has_been_downloaded
 from utils.loaders import load_primary_tracks, load_playlists, load_exportify_playlists
 from downloader.base_downloader import download_track, batch_download
 from downloader.playlist_download import download_playlist
@@ -529,8 +531,14 @@ def downloads_menu(config):
                 log_warning("No tracks found. Please check your configuration and source files.")
                 continue
 
-            _, pending = check_downloaded_files(config["output_dir"], tracks)
-            log_info(f"Total tracks: {len(tracks)} | Pending: {len(pending)}")
+            _, pending, missing_from_history = check_downloaded_files_with_history(config["output_dir"], tracks)
+            log_info(f"Total tracks: {len(tracks)} | New: {len(pending)} | Previously downloaded but missing: {len(missing_from_history)}")
+
+            if missing_from_history and questionary.confirm(
+                f"{len(missing_from_history)} track(s) were downloaded before but are missing from your library. Re-download them too?",
+                default=False,
+            ).ask():
+                pending = pending + missing_from_history
 
             if not pending:
                 log_info("✅ All tracks already downloaded. Nothing to do.")
@@ -554,8 +562,14 @@ def downloads_menu(config):
                 log_warning("No tracks found. Please check your configuration and source files.")
                 continue
 
-            _, pending = check_downloaded_files(config["output_dir"], tracks)
-            log_info(f"Total tracks: {len(tracks)} | Pending: {len(pending)}")
+            _, pending, missing_from_history = check_downloaded_files_with_history(config["output_dir"], tracks)
+            log_info(f"Total tracks: {len(tracks)} | New: {len(pending)} | Previously downloaded but missing: {len(missing_from_history)}")
+
+            if missing_from_history and questionary.confirm(
+                f"{len(missing_from_history)} track(s) were downloaded before but are missing from your library. Re-download them too?",
+                default=False,
+            ).ask():
+                pending = pending + missing_from_history
 
             if not pending:
                 log_info("✅ All tracks already downloaded. Nothing to do.")
@@ -578,6 +592,13 @@ def downloads_menu(config):
             if not artist:
                 artist = "Unknown Artist"
                 log_info(f"No artist provided. Using fallback artist: {artist}")
+
+            if has_been_downloaded(artist, song) and not questionary.confirm(
+                f"'{artist} - {song}' was downloaded before. Download it again?",
+                default=False,
+            ).ask():
+                log_info("Skipped (already downloaded before).")
+                continue
 
             download_track(
                 artist,

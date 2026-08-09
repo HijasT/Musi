@@ -59,7 +59,7 @@ def view_config(config: dict):
     # Group settings by category
     categories = {
         "File Paths": ["tracks_file", "playlists_file", "output_dir", "exportify_watch_folder"],
-        "Download Settings": ["audio_format", "sleep_between", "average_download_time"],
+        "Download Settings": ["audio_format", "audio_bitrate", "sleep_between", "average_download_time"],
         "Retry Settings": ["retry_attempts", "retry_delay"],
         "Automation": ["auto_cleanup", "auto_backup", "max_backups", "auto_redownload_corrupted", "auto_sync_enabled", "auto_sync_interval"],
         "Profile": ["profile"]

@@ -260,6 +260,7 @@ def apply_template(metadata: Dict[str, Any], template_name: Optional[str]) -> Di
     # pass-through for cover art decisions and provenance
     out["uri"] = _as_str(metadata.get("uri"))
     out["album_art_url"] = _as_str(metadata.get("album_art_url"))  # Preserve album art URL
+    out["lyrics"] = _as_str(metadata.get("lyrics"))  # independent of template fields, like cover art
     out["extra"] = metadata.get("extra") or {}
 
     return out
@@ -271,7 +272,7 @@ def apply_template(metadata: Dict[str, Any], template_name: Optional[str]) -> Di
 
 
 MB_BASE = "https://musicbrainz.org/ws/2"
-MB_USER_AGENT = "HARMONI/1.0 ( https://github.com/ ; metadata )"
+MB_USER_AGENT = "Musi/1.0 ( https://github.com/HijasT/Musi ; metadata )"
 MB_RATE_LIMIT_SECONDS = 1.05  # MusicBrainz asks for 1 req/sec
 
 
@@ -553,6 +554,43 @@ def _guess_mime(image_bytes: bytes) -> str:
 
 
 # -----------------------------
+# Lyrics (lrclib.net, no API key)
+# -----------------------------
+
+
+LRCLIB_BASE = "https://lrclib.net/api"
+
+
+def fetch_lyrics(artist: str, title: str, album: Optional[str] = None, timeout: int = 10) -> Optional[str]:
+    """Best-effort plain lyrics lookup via lrclib.net. Returns None on any failure/no match."""
+    artist_q = _as_str(artist)
+    title_q = _as_str(title)
+    if not artist_q or not title_q:
+        return None
+
+    params = {"track_name": title_q, "artist_name": artist_q}
+    album_q = _as_str(album)
+    if album_q:
+        params["album_name"] = album_q
+
+    url = f"{LRCLIB_BASE}/get?" + urllib.parse.urlencode(params)
+
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": MB_USER_AGENT, "Accept": "application/json"})
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+        lyrics = _as_str(data.get("plainLyrics"))
+        return lyrics or None
+    except urllib.error.HTTPError as e:
+        if e.code != 404:
+            log_warning(f"Lyrics lookup failed for {artist_q} - {title_q}: HTTP {e.code}")
+        return None
+    except Exception as e:
+        log_warning(f"Lyrics lookup failed for {artist_q} - {title_q}: {e}")
+        return None
+
+
+# -----------------------------
 # Embedding (multi-format)
 # -----------------------------
 
@@ -599,15 +637,19 @@ def _embed_mp3(path: str, tags: Dict[str, str], cover_bytes: Optional[bytes], co
         audio["bpm"] = tags["bpm"]
     audio.save(path)
 
-    # Use raw ID3 for comment and cover art (EasyID3 doesn't support them properly)
+    # Use raw ID3 for comment, lyrics, and cover art (EasyID3 doesn't support them properly)
     try:
-        from mutagen.id3 import COMM
+        from mutagen.id3 import COMM, USLT
         id3 = ID3(path)
-        
+
         # Add comment if provided
         if tags.get("comment"):
             id3["COMM"] = COMM(encoding=3, lang='eng', desc='', text=tags["comment"])
-        
+
+        # Add lyrics if provided
+        if tags.get("lyrics"):
+            id3["USLT"] = USLT(encoding=3, lang='eng', desc='', text=tags["lyrics"])
+
         # Add cover art if provided
         if cover_bytes:
             id3["APIC"] = APIC(
@@ -636,6 +678,7 @@ def _embed_flac(path: str, tags: Dict[str, str], cover_bytes: Optional[bytes], c
             "genre": tags.get("genre", ""),
             "bpm": tags.get("bpm", ""),
             "comment": tags.get("comment", ""),
+            "lyrics": tags.get("lyrics", ""),
         },
     )
 
@@ -665,6 +708,7 @@ def _embed_vorbis(path: str, tags: Dict[str, str], cover_bytes: Optional[bytes],
             "genre": tags.get("genre", ""),
             "bpm": tags.get("bpm", ""),
             "comment": tags.get("comment", ""),
+            "lyrics": tags.get("lyrics", ""),
         },
     )
     audio.save()
@@ -682,6 +726,7 @@ def _embed_opus(path: str, tags: Dict[str, str], cover_bytes: Optional[bytes], _
             "genre": tags.get("genre", ""),
             "bpm": tags.get("bpm", ""),
             "comment": tags.get("comment", ""),
+            "lyrics": tags.get("lyrics", ""),
         },
     )
     audio.save()
@@ -706,6 +751,8 @@ def _embed_m4a(path: str, tags: Dict[str, str], cover_bytes: Optional[bytes], co
             pass
     if tags.get("comment"):
         audio["\xa9cmt"] = [tags["comment"]]
+    if tags.get("lyrics"):
+        audio["\xa9lyr"] = [tags["lyrics"]]
 
     if cover_bytes:
         fmt = MP4Cover.FORMAT_PNG if (cover_mime == "image/png") else MP4Cover.FORMAT_JPEG
@@ -727,6 +774,7 @@ def _embed_aac(path: str, tags: Dict[str, str], _cover_bytes: Optional[bytes], _
             "date": tags.get("date", ""),
             "genre": tags.get("genre", ""),
             "comment": tags.get("comment", ""),
+            "lyrics": tags.get("lyrics", ""),
         },
     )
     audio.save()
@@ -766,11 +814,14 @@ def _embed_wav(path: str, tags: Dict[str, str], cover_bytes: Optional[bytes], co
                 easy["bpm"] = tags["bpm"]
             easy.save(path)
             
-            # Add comment using raw ID3
-            if tags.get("comment"):
-                from mutagen.id3 import COMM
+            # Add comment/lyrics using raw ID3
+            if tags.get("comment") or tags.get("lyrics"):
+                from mutagen.id3 import COMM, USLT
                 id3 = ID3(path)
-                id3["COMM"] = COMM(encoding=3, lang='eng', desc='', text=tags["comment"])
+                if tags.get("comment"):
+                    id3["COMM"] = COMM(encoding=3, lang='eng', desc='', text=tags["comment"])
+                if tags.get("lyrics"):
+                    id3["USLT"] = USLT(encoding=3, lang='eng', desc='', text=tags["lyrics"])
                 id3.save(path)
         except Exception:
             # If EasyID3 doesn't work, do nothing further.
@@ -800,12 +851,14 @@ def embed_track_metadata(
     *,
     template: Optional[str] = None,
     allow_musicbrainz: bool = True,
+    allow_lyrics: bool = True,
     config: Optional[Dict[str, Any]] = None,
 ) -> bool:
     """Embed metadata into a single audio file.
 
     - Uses JSON/CSV-provided metadata first.
     - Optionally enriches with MusicBrainz if album/date are missing.
+    - Optionally fetches plain lyrics from lrclib.net (no API key required).
     - Uses a template to decide which tags to write.
 
     Returns True on success, False on failure.
@@ -833,7 +886,7 @@ def embed_track_metadata(
                     mb = lookup_musicbrainz_with_config(base_meta["artist"], base_meta["title"], config)
                 else:
                     mb = lookup_musicbrainz(base_meta["artist"], base_meta["title"])
-                
+
                 if mb:
                     if need_album and mb.album:
                         base_meta["album"] = mb.album
@@ -841,6 +894,14 @@ def embed_track_metadata(
                         base_meta["date"] = mb.date
             except Exception as e:
                 log_warning(f"MusicBrainz lookup failed for {base_meta.get('artist')} - {base_meta.get('title')}: {e}")
+
+    if allow_lyrics and _as_str(base_meta.get("artist")) and _as_str(base_meta.get("title")):
+        try:
+            lyrics = fetch_lyrics(base_meta["artist"], base_meta["title"], album=base_meta.get("album"))
+            if lyrics:
+                base_meta["lyrics"] = lyrics
+        except Exception as e:
+            log_warning(f"Lyrics lookup failed for {base_meta.get('artist')} - {base_meta.get('title')}: {e}")
 
     meta = apply_template(base_meta, template)
     issues = validate_metadata(meta)
@@ -855,6 +916,7 @@ def embed_track_metadata(
         "genre": _as_str(meta.get("genre")),
         "bpm": _as_str(meta.get("bpm")),
         "comment": _as_str(meta.get("comment")),
+        "lyrics": _as_str(meta.get("lyrics")),
     }
 
     tpl = get_metadata_template(template)

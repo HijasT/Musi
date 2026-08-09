@@ -9,6 +9,8 @@ from tools.dependency_check import dependency_check
 from tools.library_export_json import library_export_json
 from tools.compress_music import compress_music
 from tools.choose_audio_format import choose_audio_format
+from tools.choose_audio_bitrate import choose_audio_bitrate
+from tools.convert_audio import convert_audio
 from tools.open_log import open_log
 
 def tools_menu(config):
@@ -26,7 +28,9 @@ def tools_menu(config):
                 "Dependency check",
                 "Library export as JSON",
                 "Compress music",
+                "Convert audio format",
                 "Choose audio format",
+                "Choose audio bitrate",
                 "Open log",
                 "Help",
                 "Back"
@@ -55,9 +59,15 @@ def tools_menu(config):
             elif choice == "Compress music":
                 compress_music(config)
 
+            elif choice == "Convert audio format":
+                convert_audio(config)
+
             elif choice == "Choose audio format":
                 choose_audio_format(config)
-            
+
+            elif choice == "Choose audio bitrate":
+                choose_audio_bitrate(config)
+
             elif choice == "Open log":
                 open_log()
 

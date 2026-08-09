@@ -4,6 +4,7 @@
 
   "output_dir": "music",
   "audio_format": "mp3",
+  "audio_bitrate": "320k",
   "sleep_between": 5,
   "average_download_time": 20,
   "retry_attempts": 3,
@@ -18,6 +19,8 @@
   "sync_write_tracks_json": false,
   "auto_sync_enabled": false,
   "auto_sync_interval": 3600,
+
+  "enable_lyrics_fetch": true,
 
   "spotify_client_id": "",
   "spotify_redirect_uri": "http://127.0.0.1:8888/callback",

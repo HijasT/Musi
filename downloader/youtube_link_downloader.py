@@ -57,6 +57,7 @@ def download_from_link(url, output_dir, audio_format, config=None):
         "yt-dlp",
         url,
         "-x", "--audio-format", audio_format,
+        "--audio-quality", (config or {}).get("audio_bitrate", "320k"),
         "-o", os.path.join(output_dir, "%(title)s.%(ext)s")
     ]
     cmd.extend(build_extra_ytdlp_args(config))
@@ -96,6 +97,7 @@ def download_from_playlist(url, output_dir, audio_format, sleep_between, config=
         "yt-dlp",
         url,
         "-x", "--audio-format", audio_format,
+        "--audio-quality", (config or {}).get("audio_bitrate", "320k"),
         "-o", os.path.join(output_dir, "%(title)s.%(ext)s")
     ]
     cmd.extend(build_extra_ytdlp_args(config))

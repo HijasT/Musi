@@ -515,11 +515,12 @@ class WelcomeView(QWidget):
         )
 
         if reply == QMessageBox.Yes:
-            self._add_tracks_to_queue(total_tracks)
+            added = self._add_tracks_to_queue(total_tracks)
             QMessageBox.information(
                 self,
                 "Import Complete",
-                f"Added {len(total_tracks)} tracks to the queue.\n\n"
+                f"Added {added} of {len(total_tracks)} tracks to the queue "
+                f"({len(total_tracks) - added} already downloaded or skipped).\n\n"
                 "Go to Downloads to start downloading."
             )
             self.navigate_to.emit("downloads")
@@ -551,9 +552,12 @@ class WelcomeView(QWidget):
 
         return tracks
 
-    def _add_tracks_to_queue(self, tracks: list):
+    def _add_tracks_to_queue(self, tracks: list) -> int:
         if not self.download_queue:
-            return
+            return 0
+
+        from gui.workers.dedupe import filter_new_tracks
+        tracks = filter_new_tracks(self, self.config, tracks)
 
         for track_data in tracks:
             self.download_queue.add_item(
@@ -562,3 +566,5 @@ class WelcomeView(QWidget):
                 album=track_data.get('album', ''),
                 playlist=track_data.get('playlist', '')
             )
+
+        return len(tracks)

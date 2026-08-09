@@ -319,8 +319,11 @@ class SpotifyView(QWidget):
                 continue
             pid = playlist["id"]
             if pid in self._tracks_cache:
-                self.queue.add_tracks(self._tracks_cache[pid], playlist=playlist.get("name", ""))
-                queued_count += len(self._tracks_cache[pid])
+                from gui.workers.dedupe import filter_new_tracks
+                name = playlist.get("name", "")
+                to_add = filter_new_tracks(self, self.config, self._tracks_cache[pid], playlist=name)
+                self.queue.add_tracks(to_add, playlist=name)
+                queued_count += len(to_add)
             else:
                 self._download_queue_playlists.append(playlist)
 
@@ -358,6 +361,8 @@ class SpotifyView(QWidget):
             if p and p.get("id") == playlist_id:
                 name = p.get("name", playlist_id)
                 break
+        from gui.workers.dedupe import filter_new_tracks
+        tracks = filter_new_tracks(self, self.config, tracks, playlist=name)
         self.queue.add_tracks(tracks, playlist=name)
         QTimer.singleShot(500, self._fetch_and_queue_next)
 
@@ -366,7 +371,8 @@ class SpotifyView(QWidget):
         pid = playlist.get("id")
         name = playlist.get("name", "Unknown")
         if pid in self._tracks_cache:
-            tracks = self._tracks_cache[pid]
+            from gui.workers.dedupe import filter_new_tracks
+            tracks = filter_new_tracks(self, self.config, self._tracks_cache[pid], playlist=name)
             self.queue.add_tracks(tracks, playlist=name)
             QMessageBox.information(self, "Added to Queue",
                 f"Added {len(tracks)} tracks from \"{name}\" to download queue.")
@@ -639,6 +645,10 @@ class SpotifyView(QWidget):
         if row < len(self.current_tracks):
             track = self.current_tracks[row]
             playlist_name = self.tracks_label.text().replace("Tracks - ", "")
+            from gui.workers.dedupe import filter_new_tracks
+            to_add = filter_new_tracks(self, self.config, [track], playlist=playlist_name)
+            if not to_add:
+                return
             self.queue.add_track(
                 track.get("artist", "").strip(),
                 track.get("track", "").strip(),
@@ -658,6 +668,8 @@ class SpotifyView(QWidget):
         playlist_name = self.tracks_label.text().replace("Tracks - ", "")
 
         # Add to queue
+        from gui.workers.dedupe import filter_new_tracks
+        tracks = filter_new_tracks(self, self.config, tracks, playlist=playlist_name)
         self.queue.add_tracks(tracks, playlist=playlist_name)
         QMessageBox.information(
             self, "Added to Queue",

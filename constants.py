@@ -28,4 +28,5 @@ AUDIO_BITRATE_OPTIONS = {
 
 FAILED_FILE = "data/failed_downloads.json"
 PROGRESS_FILE = "data/download_progress.json"
+HISTORY_FILE = "data/download_history.json"
 LOG_FILE = "app.log"

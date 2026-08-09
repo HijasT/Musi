@@ -139,6 +139,7 @@ class DownloadWorker(QThread):
             f"ytsearch1:{query}",
             "-x",
             "--audio-format", audio_format,
+            "--audio-quality", self.config.get("audio_bitrate", "320k"),
             "-o", os.path.join(output_dir, f"{filename}.%(ext)s"),
             "--no-playlist",
             "--quiet",
@@ -164,6 +165,7 @@ class DownloadWorker(QThread):
                 if os.path.exists(expected_path):
                     # Embed metadata if enabled
                     self._embed_metadata(expected_path, item)
+                    self._log_history(item, expected_path, audio_format)
                     return True, expected_path, None
 
                 # Try to find with any extension
@@ -171,6 +173,7 @@ class DownloadWorker(QThread):
                     check_path = os.path.join(output_dir, f"{filename}.{ext}")
                     if os.path.exists(check_path):
                         self._embed_metadata(check_path, item)
+                        self._log_history(item, check_path, audio_format)
                         return True, check_path, None
 
                 return True, None, None
@@ -197,15 +200,27 @@ class DownloadWorker(QThread):
             }
             template = self.config.get("metadata_template", "basic")
             enable_musicbrainz = self.config.get("enable_musicbrainz_lookup", True)
+            enable_lyrics = self.config.get("enable_lyrics_fetch", True)
 
             embed_track_metadata(
                 file_path,
                 track_data,
                 template=template,
-                allow_musicbrainz=enable_musicbrainz
+                allow_musicbrainz=enable_musicbrainz,
+                allow_lyrics=enable_lyrics,
+                config=self.config,
             )
         except ImportError:
             pass
+        except Exception:
+            pass
+
+    def _log_history(self, item: QueueItem, file_path: str, audio_format: str):
+        """Record the download in the persistent history log."""
+        try:
+            from managers.history_manager import log_download
+            log_download(item.artist, item.track, file_path=file_path,
+                         playlist=item.playlist, audio_format=audio_format)
         except Exception:
             pass
 

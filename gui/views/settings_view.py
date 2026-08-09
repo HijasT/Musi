@@ -11,6 +11,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Signal
 
 from config import save_config, validate_config, DEFAULT_CONFIG, load_config
+from constants import AUDIO_BITRATE_OPTIONS, VALID_AUDIO_EXTENSIONS
 from gui.styles import COLORS
 from utils.ffmpeg import check_ffmpeg_available
 from tools.ytdlp_update_checker import check_ytdlp_updates
@@ -27,6 +28,7 @@ class SettingsView(QWidget):
         self.ffmpeg_worker = None
         self.ytdlp_worker = None
         self.cleanup_worker = None
+        self.convert_worker = None
         self._setup_ui()
         self._load_values()
         self._check_ffmpeg_status()
@@ -190,6 +192,14 @@ class SettingsView(QWidget):
         self.format_combo.addItems(["mp3", "flac", "wav", "aac", "ogg", "m4a"])
         output_layout.addWidget(self.format_combo)
 
+        bitrate_label = QLabel("Audio bitrate")
+        bitrate_label.setObjectName("muted")
+        output_layout.addWidget(bitrate_label)
+        self.bitrate_combo = QComboBox()
+        for bitrate, desc in AUDIO_BITRATE_OPTIONS.items():
+            self.bitrate_combo.addItem(f"{bitrate} - {desc}", userData=bitrate)
+        output_layout.addWidget(self.bitrate_combo)
+
         layout.addWidget(output_group)
 
         # Spotify Settings Group
@@ -279,6 +289,9 @@ class SettingsView(QWidget):
         self.musicbrainz_check = QCheckBox("Enable MusicBrainz lookup")
         metadata_layout.addWidget(self.musicbrainz_check)
 
+        self.lyrics_check = QCheckBox("Auto-fetch lyrics (via lrclib.net)")
+        metadata_layout.addWidget(self.lyrics_check)
+
         layout.addWidget(metadata_group)
 
         # Backup Settings Group
@@ -330,6 +343,51 @@ class SettingsView(QWidget):
         self.cleanup_progress.setVisible(False)
         cleanup_layout.addWidget(self.cleanup_progress)
 
+        # --- Separator ---
+        convert_sep = QFrame()
+        convert_sep.setFrameShape(QFrame.HLine)
+        convert_sep.setStyleSheet(f"color: {COLORS['border']};")
+        convert_sep.setFixedHeight(1)
+        cleanup_layout.addWidget(convert_sep)
+
+        convert_desc = QLabel(
+            "Convert your entire library to a different format/bitrate using ffmpeg. "
+            "Originals are kept unless you choose to delete them."
+        )
+        convert_desc.setObjectName("muted")
+        convert_desc.setWordWrap(True)
+        cleanup_layout.addWidget(convert_desc)
+
+        convert_options_row = QHBoxLayout()
+        self.convert_format_combo = QComboBox()
+        self.convert_format_combo.addItems(sorted(ext.strip(".") for ext in VALID_AUDIO_EXTENSIONS))
+        convert_options_row.addWidget(self.convert_format_combo)
+
+        self.convert_bitrate_combo = QComboBox()
+        for bitrate, desc in AUDIO_BITRATE_OPTIONS.items():
+            self.convert_bitrate_combo.addItem(f"{bitrate} - {desc}", userData=bitrate)
+        convert_options_row.addWidget(self.convert_bitrate_combo)
+        cleanup_layout.addLayout(convert_options_row)
+
+        self.convert_delete_originals_check = QCheckBox("Delete original files after conversion")
+        cleanup_layout.addWidget(self.convert_delete_originals_check)
+
+        convert_status_row = QHBoxLayout()
+        self.convert_status_label = QLabel("")
+        self.convert_status_label.setObjectName("muted")
+        convert_status_row.addWidget(self.convert_status_label, 1)
+        self.convert_run_btn = QPushButton("Convert Library")
+        self.convert_run_btn.setObjectName("secondary")
+        self.convert_run_btn.clicked.connect(self._run_convert_audio)
+        convert_status_row.addWidget(self.convert_run_btn)
+        cleanup_layout.addLayout(convert_status_row)
+
+        self.convert_progress = QProgressBar()
+        self.convert_progress.setMinimum(0)
+        self.convert_progress.setMaximum(0)
+        self.convert_progress.setVisible(False)
+        cleanup_layout.addWidget(self.convert_progress)
+
         layout.addWidget(cleanup_group)
 
         # Spacer
@@ -357,6 +415,8 @@ class SettingsView(QWidget):
         """Load current config values into the form."""
         self.output_dir_input.setText(self.config.get("output_dir", "music"))
         self.format_combo.setCurrentText(self.config.get("audio_format", "mp3"))
+        bitrate_index = self.bitrate_combo.findData(self.config.get("audio_bitrate", "320k"))
+        self.bitrate_combo.setCurrentIndex(bitrate_index if bitrate_index >= 0 else self.bitrate_combo.count() - 1)
         self.client_id_input.setText(self.config.get("spotify_client_id", ""))
         self.redirect_uri_input.setText(self.config.get("spotify_redirect_uri", "http://127.0.0.1:8888/callback"))
         self.sleep_input.setText(str(self.config.get("sleep_between", 5)))
@@ -366,6 +426,7 @@ class SettingsView(QWidget):
         self.metadata_check.setChecked(self.config.get("enable_metadata_embedding", True))
         self.template_combo.setCurrentText(self.config.get("metadata_template", "basic"))
         self.musicbrainz_check.setChecked(self.config.get("enable_musicbrainz_lookup", True))
+        self.lyrics_check.setChecked(self.config.get("enable_lyrics_fetch", True))
         self.backup_check.setChecked(self.config.get("auto_backup", True))
         self.max_backups_input.setText(str(self.config.get("max_backups", 10)))
         self.auto_redownload_check.setChecked(self.config.get("auto_redownload_corrupted", True))
@@ -637,6 +698,68 @@ class SettingsView(QWidget):
                 summary += f"\nSkipped {skipped} (filename didn't match \"Artist - Title\")."
         QMessageBox.information(self, "Library Cleanup Complete", summary)
 
+    def _run_convert_audio(self):
+        """Convert the music library to the selected format/bitrate via ffmpeg."""
+        target_format = self.convert_format_combo.currentText()
+        target_bitrate = self.convert_bitrate_combo.currentData()
+        delete_originals = self.convert_delete_originals_check.isChecked()
+
+        message = f"This will convert your library to {target_format.upper()} at {target_bitrate}."
+        if delete_originals:
+            message += "\n\nOriginal files will be DELETED after a successful conversion."
+        else:
+            message += "\n\nOriginal files will be kept alongside the converted copies."
+        message += "\n\nThis may take a while for large libraries. Continue?"
+
+        reply = QMessageBox.question(
+            self,
+            "Convert Library",
+            message,
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.Yes
+        )
+        if reply != QMessageBox.Yes:
+            return
+
+        self.convert_run_btn.setEnabled(False)
+        self.convert_status_label.setText(f"Converting to {target_format}...")
+        self.convert_progress.setVisible(True)
+
+        from gui.workers.convert_audio_worker import ConvertAudioWorker
+        self.convert_worker = ConvertAudioWorker(
+            dict(self.config), target_format, target_bitrate, delete_originals=delete_originals,
+        )
+        self.convert_worker.finished.connect(self._on_convert_finished)
+        self.convert_worker.start()
+
+    def _on_convert_finished(self, result: dict):
+        """Handle audio conversion completion."""
+        self.convert_progress.setVisible(False)
+        self.convert_run_btn.setEnabled(True)
+        self.convert_worker = None
+
+        if result.get("error"):
+            self.convert_status_label.setText("Failed")
+            QMessageBox.warning(self, "Conversion Failed", result["error"])
+            return
+
+        converted = result.get("converted", 0)
+        skipped = result.get("skipped", 0)
+        failed = result.get("failed", 0)
+
+        self.convert_status_label.setText(f"Converted {converted}, skipped {skipped}, failed {failed}")
+
+        if converted == 0 and skipped == 0 and failed == 0:
+            QMessageBox.information(self, "Convert Library", "No matching files found to convert.")
+            return
+
+        summary = f"Converted {converted} file(s)."
+        if skipped:
+            summary += f"\nSkipped {skipped} (already in target format or naming conflict)."
+        if failed:
+            summary += f"\nFailed {failed}."
+        QMessageBox.information(self, "Conversion Complete", summary)
+
     def _browse_ffmpeg_path(self):
         """Open file browser for FFmpeg binary."""
         path, _ = QFileDialog.getOpenFileName(self, "Select FFmpeg Binary")
@@ -696,6 +819,7 @@ class SettingsView(QWidget):
 
             self.config["output_dir"] = output_dir
             self.config["audio_format"] = self.format_combo.currentText()
+            self.config["audio_bitrate"] = self.bitrate_combo.currentData()
             self.config["spotify_client_id"] = self.client_id_input.text().strip()
             self.config["sleep_between"] = self._safe_int(self.sleep_input.text(), 5)
             self.config["retry_attempts"] = self._safe_int(self.retry_input.text(), 3)
@@ -704,6 +828,7 @@ class SettingsView(QWidget):
             self.config["enable_metadata_embedding"] = self.metadata_check.isChecked()
             self.config["metadata_template"] = self.template_combo.currentText()
             self.config["enable_musicbrainz_lookup"] = self.musicbrainz_check.isChecked()
+            self.config["enable_lyrics_fetch"] = self.lyrics_check.isChecked()
             self.config["auto_backup"] = self.backup_check.isChecked()
             self.config["max_backups"] = self._safe_int(self.max_backups_input.text(), 10)
             self.config["auto_redownload_corrupted"] = self.auto_redownload_check.isChecked()

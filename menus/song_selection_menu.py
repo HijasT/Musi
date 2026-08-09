@@ -9,6 +9,9 @@ def select_songs_for_playlist(playlist_name: str, tracks: list, playlist_dir: st
 
     - Shows all songs in the playlist.
     - Songs that already exist in playlist_dir start unchecked.
+    - Songs downloaded before (per download history) but missing from playlist_dir
+      are marked "(previously downloaded)" and also start unchecked, so re-downloading
+      them is an explicit opt-in rather than automatic.
 
     Returns a list of normalized track dicts: [{'artist': str, 'track': str}, ...]
     """
@@ -33,11 +36,20 @@ def select_songs_for_playlist(playlist_name: str, tracks: list, playlist_dir: st
 
     existing_keys = existing_track_keys_in_dir(playlist_dir)
 
+    try:
+        from managers.history_manager import has_been_downloaded
+        history_keys = {
+            track_key(t) for t in normalized
+            if track_key(t) not in existing_keys and has_been_downloaded(t.get("artist", ""), t.get("track", ""))
+        }
+    except Exception:
+        history_keys = set()
+
     # Maintain a working set of selected song keys.
     selected_keys = {
         track_key(t)
         for t in normalized
-        if track_key(t) not in existing_keys
+        if track_key(t) not in existing_keys and track_key(t) not in history_keys
     }
 
     while True:
@@ -46,7 +58,9 @@ def select_songs_for_playlist(playlist_name: str, tracks: list, playlist_dir: st
         for t in normalized:
             key = track_key(t)
             exists = key in existing_keys
-            label = f"{t['artist']} - {t['track']}" + (" (exists)" if exists else "")
+            previously_downloaded = key in history_keys
+            suffix = " (exists)" if exists else (" (previously downloaded)" if previously_downloaded else "")
+            label = f"{t['artist']} - {t['track']}" + suffix
             choices.append(
                 questionary.Choice(
                     title=label,

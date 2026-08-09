@@ -3,6 +3,8 @@ import os
 import sys
 from typing import Any, Dict, Optional
 
+from constants import AUDIO_BITRATE_OPTIONS
+
 
 def get_app_dir() -> str:
     """Get the application directory (works for both script and frozen exe)."""
@@ -24,6 +26,7 @@ DEFAULT_CONFIG = {
 
     "output_dir": "music",
     "audio_format": "mp3",
+    "audio_bitrate": "320k",
     "sleep_between": 5,
     "average_download_time": 20,
     "retry_attempts": 3,
@@ -52,6 +55,7 @@ DEFAULT_CONFIG = {
     "musicbrainz_rate_limit": True,
     "musicbrainz_retries": 3,
     "musicbrainz_backoff_base": 0.75,
+    "enable_lyrics_fetch": True,
 
     # Spotify Web API (OAuth PKCE)
     # NOTE: These are optional unless/ until a Spotify API workflow is enabled.
@@ -129,6 +133,11 @@ CONFIG_SCHEMA = {
         "required": True,
         "choices": ["mp3", "wav", "flac", "aac", "ogg", "m4a"],
     },
+    "audio_bitrate": {
+        "type": str,
+        "required": False,
+        "choices": list(AUDIO_BITRATE_OPTIONS.keys()),
+    },
     "sleep_between": {"type": (int, float), "required": True, "min": 0, "max": 60},
     "average_download_time": {"type": (int, float), "required": False, "min": 1, "max": 300},
     "retry_attempts": {"type": int, "required": False, "min": 0, "max": 10},
@@ -156,6 +165,7 @@ CONFIG_SCHEMA = {
     "musicbrainz_rate_limit": {"type": bool, "required": False},
     "musicbrainz_retries": {"type": int, "required": False, "min": 0, "max": 10},
     "musicbrainz_backoff_base": {"type": (int, float), "required": False, "min": 0.1, "max": 5.0},
+    "enable_lyrics_fetch": {"type": bool, "required": False},
 
     # Spotify Web API (OAuth PKCE)
     "spotify_client_id": {"type": str, "required": False},

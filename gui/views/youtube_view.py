@@ -158,6 +158,10 @@ class YouTubeView(QWidget):
 
         artist, track = self._parse_query(query)
         if artist and track:
+            from gui.workers.dedupe import filter_new_tracks
+            if not filter_new_tracks(self, self.config, [{"artist": artist, "track": track}]):
+                self.url_input.clear()
+                return
             self.queue.add_track(artist, track)
             self.url_input.clear()
             QMessageBox.information(
@@ -177,7 +181,7 @@ class YouTubeView(QWidget):
             return
 
         lines = text.split("\n")
-        added = 0
+        parsed = []
         skipped = 0
 
         for line in lines:
@@ -187,10 +191,15 @@ class YouTubeView(QWidget):
 
             artist, track = self._parse_query(line)
             if artist and track:
-                self.queue.add_track(artist, track)
-                added += 1
+                parsed.append({"artist": artist, "track": track})
             else:
                 skipped += 1
+
+        from gui.workers.dedupe import filter_new_tracks
+        to_add = filter_new_tracks(self, self.config, parsed)
+        for t in to_add:
+            self.queue.add_track(t["artist"], t["track"])
+        added = len(to_add)
 
         if added > 0:
             self.batch_input.clear()

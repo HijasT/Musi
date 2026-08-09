@@ -58,6 +58,43 @@ def check_downloaded_files(output_dir, tracks):
     return len(downloaded), pending
 
 
+def check_downloaded_files_with_history(output_dir, tracks):
+    """
+    Like check_downloaded_files, but also separates out tracks that were
+    downloaded before (per data/download_history.json) yet are missing from
+    output_dir, so callers can confirm before re-downloading them.
+
+    Returns: (downloaded_count, pending_new, pending_missing_from_history)
+    """
+    from managers.history_manager import has_been_downloaded  # lazy: avoids import cycle
+
+    downloaded = []
+    pending_new = []
+    pending_missing = []
+
+    try:
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir, exist_ok=True)
+    except Exception:
+        pass
+
+    existing_keys = existing_track_keys_in_dir(output_dir)
+
+    for track in tracks:
+        if track_key(track) in existing_keys:
+            downloaded.append(track)
+        elif has_been_downloaded(track.get("artist", ""), track.get("track", "")):
+            pending_missing.append(track)
+        else:
+            pending_new.append(track)
+
+    log_info(
+        f"Downloaded: {len(downloaded)} tracks, New: {len(pending_new)} tracks, "
+        f"Previously downloaded but missing: {len(pending_missing)} tracks"
+    )
+    return len(downloaded), pending_new, pending_missing
+
+
 def check_downloaded_playlists(output_dir, playlists):
     """
     Checks which playlists and tracks have already been downloaded.

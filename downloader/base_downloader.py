@@ -30,13 +30,15 @@ def _embed_metadata_after_download(
         # Get metadata template and options
         template = config.get("metadata_template", "basic")
         enable_musicbrainz = config.get("enable_musicbrainz_lookup", True)
-        
+        enable_lyrics = config.get("enable_lyrics_fetch", True)
+
         # Embed metadata
         return embed_track_metadata(
             audio_path,
             track,
             template=template,
             allow_musicbrainz=enable_musicbrainz,
+            allow_lyrics=enable_lyrics,
             config=config,
         )
     except ImportError:
@@ -57,6 +59,7 @@ def download_track(artist, track, output_dir, audio_format, sleep_between, confi
         f"ytsearch1:{query}",
         "-x",
         "--audio-format", audio_format,
+        "--audio-quality", (config or {}).get("audio_bitrate", "320k"),
         "-o", os.path.join(output_dir, f"{filename}.%(ext)s")
     ]
     cmd.extend(build_extra_ytdlp_args(config))
@@ -66,7 +69,7 @@ def download_track(artist, track, output_dir, audio_format, sleep_between, confi
         process.wait()
         if process.returncode == 0:
             log_success(f"Downloaded successfully: {query}")
-            
+
             # Try to find the downloaded audio file and embed metadata
             try:
                 from downloader.metadata import find_downloaded_audio_path
@@ -79,6 +82,12 @@ def download_track(artist, track, output_dir, audio_format, sleep_between, confi
                         log_info(f"Metadata embedded for {query}")
                     else:
                         log_warning(f"Metadata embedding failed for {query}")
+
+                    try:
+                        from managers.history_manager import log_download
+                        log_download(artist, track, file_path=audio_path, audio_format=audio_format)
+                    except Exception:
+                        pass
                 else:
                     log_warning(f"Could not find downloaded audio file for metadata embedding: {filename}")
             except Exception as e:
@@ -103,6 +112,7 @@ def _download_worker(track_dict, output_dir, audio_format, config=None):
         f"ytsearch1:{query}",
         "-x",
         "--audio-format", audio_format,
+        "--audio-quality", (config or {}).get("audio_bitrate", "320k"),
         "-o", os.path.join(output_dir, f"{filename}.%(ext)s")
     ]
     cmd.extend(build_extra_ytdlp_args(config))
@@ -110,10 +120,10 @@ def _download_worker(track_dict, output_dir, audio_format, config=None):
     try:
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         stdout, stderr = process.communicate()
-        
+
         if process.returncode == 0:
             log_success(f"Downloaded: {query}")
-            
+
             # Try to find the downloaded audio file and embed metadata
             try:
                 from downloader.metadata import find_downloaded_audio_path
@@ -123,6 +133,15 @@ def _download_worker(track_dict, output_dir, audio_format, config=None):
                     metadata_success = _embed_metadata_after_download(audio_path, track_dict, config or {})
                     if not metadata_success:
                         log_warning(f"Metadata embedding failed for {query}")
+
+                    try:
+                        from managers.history_manager import log_download
+                        log_download(
+                            artist, track, file_path=audio_path,
+                            playlist=track_dict.get("playlist"), audio_format=audio_format,
+                        )
+                    except Exception:
+                        pass
                 else:
                     log_warning(f"Could not find downloaded audio file for metadata embedding: {filename}")
             except Exception as e:
